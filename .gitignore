@@ -96,3 +96,6 @@ build/
 
 ### VS Code ###
 .vscode/
+
+### H2 DB
+*.mv.db

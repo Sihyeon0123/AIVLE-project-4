@@ -3,6 +3,7 @@ package com.example.back.service;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
 import com.example.back.DTO.LoginRequest;
@@ -19,7 +20,7 @@ public class AuthService {
 
     private final UserRepository userRepository;
     private final JwtUtil jwtUtil;
-
+    private final PasswordEncoder passwordEncoder;
 
     public void signup(SignupRequest req) {
 
@@ -43,7 +44,7 @@ public class AuthService {
 
         User user = new User();
         user.setId(req.getId());
-        user.setPw(req.getPw());
+        user.setPw(passwordEncoder.encode(req.getPw()));
         user.setName(req.getName());
 
         userRepository.save(user);
@@ -68,14 +69,13 @@ public class AuthService {
          */
 
         log.info("로그인 처리 시작: id={}", req.getId());
-
         User user = userRepository.findById(req.getId())
             .orElseThrow(() -> {
                 log.warn("로그인 실패 - 존재하지 않는 아이디: id={}", req.getId());
                 return new IllegalArgumentException("등록되지 않은 아이디입니다.");
             });
 
-        if (!user.getPw().equals(req.getPw())) {
+        if (!passwordEncoder.matches(req.getPw(), user.getPw())) {
             log.warn("로그인 실패 - 비밀번호 불일치: id={}", req.getId());
             throw new RuntimeException("비밀번호가 일치하지 않습니다.");
         }
@@ -149,7 +149,7 @@ public class AuthService {
             });
 
         // 3) 비밀번호 검증
-        if (!user.getPw().equals(pw)) {
+        if (!passwordEncoder.matches(pw, user.getPw())) {
             log.warn("회원 탈퇴 실패 - 비밀번호 불일치: userId={}", userId);
             throw new RuntimeException("사용자 정보를 찾을 수 없습니다.");
         }
