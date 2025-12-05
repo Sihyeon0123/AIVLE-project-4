@@ -24,8 +24,7 @@ import lombok.extern.slf4j.Slf4j;
 public class AuthController {
      private final AuthService authService; 
 
-
-
+     
     @PostMapping("/signup")
     public ResponseEntity<ApiResponse<?>> signup(@RequestBody SignupRequest req) {
         /**
