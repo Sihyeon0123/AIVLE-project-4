@@ -29,21 +29,19 @@ export default function SignupPage() {
         body: JSON.stringify({ id, pw, name }),
       });
 
-      if (!res.ok) {
-        throw new Error('서버 오류');
-      }
-
       const result = await res.json();
       console.log('회원가입 서버 응답:', result);
 
-      // ApiResponse 구조: { status, message, data }
-      if (result.status === 'success') {
-        alert('회원가입 성공! 이제 로그인 해주세요.');
-
-
+      if (res.ok && result.status === 'success') {
+        alert(result.message || '회원가입 성공! 이제 로그인 해주세요.');
         router.push('/login');
       } else {
-        alert(result.message ?? '회원가입 실패');
+        // 401: 중복 ID 등
+        if (res.status === 401) {
+          alert(result.message || '아이디가 이미 존재하거나 잘못된 요청입니다.');
+        } else {
+          alert(result.message || '회원가입 실패');
+        }
       }
     } catch (error) {
       console.error('회원가입 요청 오류:', error);
@@ -93,8 +91,11 @@ export default function SignupPage() {
             />
           </label>
 
-          {/* 버튼은 기존 primary-btn 대신 공통 sub-btn 스타일 사용 */}
-          <button type="submit" className="sub-btn" style={{ marginTop: "20px", width: "100%" }}>
+          <button
+            type="submit"
+            className="sub-btn"
+            style={{ marginTop: '20px', width: '100%' }}
+          >
             가입하기
           </button>
         </form>
