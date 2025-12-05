@@ -7,7 +7,6 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
 import com.example.back.DTO.LoginRequest;
-import com.example.back.DTO.LoginResponse;
 import com.example.back.DTO.SignupRequest;
 import com.example.back.entity.User;
 import com.example.back.jwt.JwtUtil;
@@ -53,22 +52,23 @@ public class AuthService {
     }
 
     @SuppressWarnings("null")
-    public LoginResponse login(LoginRequest req) {
+    public String login(LoginRequest req) {
 
         /**
          * 로그인 서비스 로직
          * - ID로 유저 조회
          * - 비밀번호 검증
-         * - JWT 토큰 생성 후 LoginResponse 반환
+         * - JWT 토큰 생성 후 반환 
          *
          * @param req LoginRequest
          *   - req.getId(): 로그인 ID
          *   - req.getPw(): 입력한 비밀번호
          *
-         * @return LoginResponse
+         * @return String (JWT Access Token)
          */
 
         log.info("로그인 처리 시작: id={}", req.getId());
+
         User user = userRepository.findById(req.getId())
             .orElseThrow(() -> {
                 log.warn("로그인 실패 - 존재하지 않는 아이디: id={}", req.getId());
@@ -84,13 +84,9 @@ public class AuthService {
 
         log.info("로그인 성공 - 토큰 발급: id={}", req.getId());
 
-        return new LoginResponse(
-            "success",
-            "로그인 성공",
-            user.getId(),
-            token
-        );
+        return token;
     }
+
 
 
     public void logout(String token) {
@@ -158,6 +154,16 @@ public class AuthService {
         userRepository.delete(user);
 
         log.info("회원 탈퇴 처리 완료: userId={}", userId);
+    }
+
+    public String validateAccessToken(String token) {
+        /**
+         * JWT 토큰 유효성 검사
+         * - 정상: "VALID"
+         * - 그 외:Exception
+         */
+        log.info("토큰 유효성 검증 시작");
+        return jwtUtil.validateToken(token); // 예외는 그대로 Controller로 전파
     }
 
 

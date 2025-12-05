@@ -1,10 +1,46 @@
-import React from 'react';
+"use client";
+
+import React, { useState, useEffect } from 'react';
 
 function Page() {
 
+    // ======================= State 저장 공간 ========================
+
+    const [제목, setTitle] = useState("");
+    const [설명, setDescription] = useState("");
+    const [내용, setContent] = useState("");
+    const [카테고리, setCategory] = useState("");
+    const [생성표지 , setPreviewImageUrl] = useState("");
+
+    const handleSubmit = () => {
+        const postData = {
+            제목,
+            설명,
+            내용,
+            카테고리
+        };
+        localStorage.setItem("postData", JSON.stringify(postData));
+        console.log(postData);
+        window.open("/new_post_002", "_blank");
+    }
+
+    useEffect(() => {
+        const handleMessage = (event) => {
+            if (event.data && event.data.imageUrl) {
+                console.log("받은 이미지 URL:", event.data.imageUrl);
+                setPreviewImageUrl(event.data.imageUrl);
+            }
+        };
+        window.addEventListener("message", handleMessage);
+        return () => window.removeEventListener("message", handleMessage);
+    }, []);
+
+
+    // ======================= Style 저장 공간 ========================
+
     const containerStyle = {
         maxWidth: '100%',
-        width: '100%',
+        width: '80%',
         minHeight: 'auto',
         margin: '0 auto',
         border: '1px solid black',
@@ -91,6 +127,10 @@ function Page() {
         color: 'white',
     }
 
+    const finalCheck = {
+
+    }
+
     // =======================구==분==선===============================
 
     return (
@@ -103,6 +143,8 @@ function Page() {
                     type = 'text'
                     placeholder= '제목을 입력해 주세요.'
                     style = {titleInputStyle}
+                    value={제목}
+                    onChange={(e) => setTitle(e.target.value)}
                 />
             </div>
 
@@ -110,8 +152,13 @@ function Page() {
             <div style = {mainContentStyle}>
 
                 <div style = {previewImageStyle}>
-                    <div style = {textStyle}>미리보기 이미지</div>
-                    <div style = {imageAreaStyle}></div>
+                    <div style={imageAreaStyle}>
+                        {생성표지 ? (
+                            <img src={생성표지} style={{ width: "100%", height: "100%", objectFit: "cover" }} />
+                        ) : (
+                            ""
+                        )}
+                    </div>
                 </div>
 
                 <div style = {TextContentAreaStyle}>
@@ -120,6 +167,8 @@ function Page() {
                     <textarea
                         placeholder = "작품 설명을 입력해 주세요."
                         style = {textInputStyle}
+                        value={설명}
+                        onChange={(e) => setDescription(e.target.value)}
                     />
 
                     {/*작품 내용*/}
@@ -127,26 +176,33 @@ function Page() {
                     <textarea
                         placeholder = "작품 내용을 입력해 주세요."
                         style = {textInputStyle}
+                        value={내용}
+                        onChange={(e) => setContent(e.target.value)}
                     />
 
                     {/* 카테고리 */}
                     <div style = {textStyle}>카테고리</div>
-                    <select style = {{backgroundColor: 'white'}}>
+                    <select
+                        style = {{backgroundColor: 'white'}}
+                        value={카테고리}
+                        onChange={(e) => setCategory(e.target.value)}>
+
                         <option value="">카테고리 선택</option>
                         <option value="literature">문학</option>
                         <option value="humanities">인문</option>
                         <option value="art">예술</option>
                         <option value="study">어학</option>
                         <option value="recipe">실용서</option>
+
                     </select>
 
                     {/* 버튼 */}
                     <div style={buttonContainerStyle}>
-                        <button style={buttonStyle}>
+                        <button style={buttonStyle} onClick={handleSubmit}>
                             이미지 생성
                         </button>
 
-                        <button style={buttonStyle}>
+                        <button style={buttonStyle} onClick={finalCheck}>
                             게시물 등록
                         </button>
                     </div>
