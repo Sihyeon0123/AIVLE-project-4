@@ -19,7 +19,7 @@ export default function MyInfoPage() {
     setUserName(name);
   }, []);
 
-  // 회원정보 수정
+  // 회원정보 수정 (⚠️ 백엔드에 /api/auth/update 아직 없음)
   const handleSubmit = async (e) => {
     e.preventDefault();
 
@@ -43,10 +43,11 @@ export default function MyInfoPage() {
 
     try {
       const res = await fetch('http://localhost:8080/api/auth/update', {
-        // ⚠ 이 API는 백엔드에 구현된 뒤에 실제로 동작함
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
+          // 토큰 헤더로 보낼지 여부는 백엔드 설계에 따라 추가
+          // 'Authorization': `Bearer ${sessionStorage.getItem('token')}`,
         },
         body: JSON.stringify(body),
       });
@@ -87,8 +88,9 @@ export default function MyInfoPage() {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
+          // ✅ 컨트롤러가 Authorization 헤더에서 토큰을 읽음
+          'Authorization': `Bearer ${token}`,
         },
-        body: JSON.stringify({ token }),
       });
 
       const result = await res.json();
@@ -134,9 +136,11 @@ export default function MyInfoPage() {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
+          // ✅ 여기서도 Authorization 헤더 필수
+          'Authorization': `Bearer ${token}`,
         },
         body: JSON.stringify({
-          token,
+          // ✅ DeleteRequest는 pw만 받음
           pw,
         }),
       });
@@ -175,7 +179,6 @@ export default function MyInfoPage() {
               {userId || '-'}
             </div>
           </label>
-
 
           <label>
             이름
