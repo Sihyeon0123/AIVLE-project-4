@@ -3,8 +3,11 @@ package com.example.back.controller;
 import java.io.File;
 
 import com.example.back.DTO.ApiResponse;
+import com.example.back.DTO.BookCreateRequest;
+import com.example.back.DTO.BookCreateResponse;
 import com.example.back.DTO.BookListResponse;
 import com.example.back.service.BookService;
+import jakarta.servlet.http.HttpServletRequest;
 import org.springframework.core.io.FileSystemResource;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
@@ -69,9 +72,15 @@ public class BookController {
 
     @GetMapping
     public ResponseEntity<ApiResponse<?>> getBooks(
-            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "1") int page,
             @RequestParam(defaultValue = "10") int size
     ) {
+        /**
+         * 도서 목록 조회 API
+         * {page}를 기준으로 도서 목록 조회.
+         * page: default 1
+         * size: defalt = 10
+         */
         log.info("도서 목록 조회 요청: page={}, size={}", page, size);
 
         try {
@@ -100,5 +109,55 @@ public class BookController {
             );
         }
     }
+
+    // TODO: 도서 상세 정보 조회 (GET)
+
+
+    // TODO: 신규 도서 등록 (POST)
+    @PostMapping
+    public ResponseEntity<ApiResponse<?>> createBook(
+            HttpServletRequest request,
+            @RequestBody BookCreateRequest req
+    ) {
+        String userId = (String) request.getAttribute("userId");
+        // String userId = "test"; // TODO: Test 용 userId 이므로 확인 후 삭제 부탁드립니다.
+
+        log.info("도서 등록 요청: userId={}, title={}", userId, req.getTitle());
+
+        try {
+            BookCreateResponse data = bookService.createBook(userId, req);
+
+            log.info("도서 등록 성공: bookId={}", data.getBookId());
+
+            return ResponseEntity.status(201).body(
+                    new ApiResponse<>("success", "도서등록완료", data)
+            );
+
+        } catch (IllegalArgumentException e) {
+            log.warn("도서 등록 실패 - 잘못된 요청: userId={}, msg={}", userId, e.getMessage());
+            return ResponseEntity.status(400).body(
+                    new ApiResponse<>("error", e.getMessage(), null)
+            );
+
+        } catch (RuntimeException e) {
+            // 사용자 없음, 카테고리 없음 등
+            log.warn("도서 등록 실패 - 인증/조회 문제: userId={}, msg={}", userId, e.getMessage());
+            return ResponseEntity.status(401).body(
+                    new ApiResponse<>("error", e.getMessage(), null)
+            );
+
+        } catch (Exception e) {
+            log.error("도서 등록 서버 오류: userId={}, error={}", userId, e.toString());
+            return ResponseEntity.status(500).body(
+                    new ApiResponse<>("error", "서버 내부 오류가 발생했습니다. 관리자에게 문의하세요.", null)
+            );
+        }
+    }
+
+    // TODO: 도서 수정 (PUT)
+
+
+    // TODO: 도서 삭제 (DELETE)
+
 
 }

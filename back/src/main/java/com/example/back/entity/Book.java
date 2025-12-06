@@ -15,7 +15,7 @@ import java.time.LocalDateTime;
 public class Book {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private long id; // PK
+    private Long id; // PK
 
     @ManyToOne
     @JoinColumn(name = "user_id", nullable = false)
