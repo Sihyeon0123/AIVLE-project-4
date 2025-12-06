@@ -2,10 +2,7 @@ package com.example.back.controller;
 
 import java.io.File;
 
-import com.example.back.DTO.ApiResponse;
-import com.example.back.DTO.BookCreateRequest;
-import com.example.back.DTO.BookCreateResponse;
-import com.example.back.DTO.BookListResponse;
+import com.example.back.DTO.*;
 import com.example.back.jwt.JwtUtil;
 import com.example.back.service.BookService;
 import jakarta.servlet.http.HttpServletRequest;
@@ -78,7 +75,7 @@ public class BookController {
             @RequestParam(defaultValue = "10") int size
     ) {
         /**
-         * 도서 목록 조회 API
+         * 도서 목록 조회 API (GET)
          * - {page}를 기준으로 도서 목록을 조회합니다.
          *
          * @param page Long
@@ -122,14 +119,13 @@ public class BookController {
     // TODO: 도서 상세 정보 조회 (GET)
 
 
-    // TODO: 신규 도서 등록 (POST)
     @PostMapping
     public ResponseEntity<ApiResponse<?>> createBook(
             @RequestAttribute("userId") String userId,
             @RequestBody BookCreateRequest req
     ) {
         /**
-         * 도서 등록 API
+         * 도서 등록 API (POST)
          *
          * <동작 개요>
          * - JWT 필터에서 검증된 userId(@RequestAttribute)와 요청 본문(BookCreateRequest)을 전달받아
@@ -179,8 +175,66 @@ public class BookController {
         }
     }
 
-    // TODO: 도서 수정 (PUT)
+    @PutMapping("/{bookId}")
+    public ResponseEntity<ApiResponse<?>> updateBook(
+            @RequestAttribute("userId") String userId,
+            @PathVariable Long bookId,
+            @RequestBody BookUpdateRequest req
+    ) {
+        /**
+         * 도서 수정 API (PUT)
+         *
+         * <동작 개요>
+         * - JWT 인증된 사용자가 URL 경로로 전달된 bookId와 요청 본문의 수정 데이터를 기반으로 본인이 등록한 도서 정보를 검증 후 수정한다.
+         *
+         * <요청 정보>
+         * - URL: /api/books/{bookId}
+         * - @RequestAttribute("userId") String userId
+         *   : JWT 토큰에서 추출된 인증 사용자 ID
+         * - @PathVariable Long bookId
+         *   : 수정 대상이 되는 도서의 고유 식별자(PK)
+         * - @RequestBody BookUpdateRequest req
+         *   : 수정할 도서 정보 (title, description, content, categoryId)
+         *
+         * <응답 형식>
+         * - 200: 성공 (200 OK)
+         * - 400: 실패 필수 입력 값 누락, 잘못된 요청 데이터인 경우 (잘못된 요청)
+         * - 401: 실패 사용자 정보가 없거나, 존재하지 않는 도서를 수정하려 하거나, 본인이 등록하지 않은 도서를 수정하려 할 경우 (인증/조회/권한 문제)
+         * - 500: 그 외 예기치 못한 서버 내부 오류 발생 시 (서버 오류)
+         */
+        log.info("도서 수정 요청: userId={}, bookId={}, title={}", userId, bookId, req.getTitle());
 
+        try {
+            BookUpdateResponse data = bookService.updateBook(userId, bookId, req);
+
+            log.info("도서 수정 성공: bookId={}", data.getBookId());
+
+            return ResponseEntity.ok(
+                    new ApiResponse<>("success", "도서수정완료", data)
+            );
+
+        } catch (IllegalArgumentException e) {
+            // 잘못된 요청 데이터 (필수값 누락 등)
+            log.warn("도서 수정 실패 - 잘못된 요청: userId={}, bookId={}, msg={}", userId, bookId, e.getMessage());
+            return ResponseEntity.status(400).body(
+                    new ApiResponse<>("error", e.getMessage(), null)
+            );
+
+        } catch (RuntimeException e) {
+            // 사용자 없음, 도서 없음, 권한 없음, 카테고리 없음 등 도메인/인증 관련 문제
+            log.warn("도서 수정 실패 - 인증/조회/권한 문제: userId={}, bookId={}, msg={}", userId, bookId, e.getMessage());
+            return ResponseEntity.status(401).body(
+                    new ApiResponse<>("error", e.getMessage(), null)
+            );
+
+        } catch (Exception e) {
+            // 예기치 못한 서버 오류
+            log.error("도서 수정 서버 오류: userId={}, bookId={}, error={}", userId, bookId, e.toString());
+            return ResponseEntity.status(500).body(
+                    new ApiResponse<>("error", "서버 내부 오류가 발생했습니다. 관리자에게 문의하세요.", null)
+            );
+        }
+    }
 
     // TODO: 도서 삭제 (DELETE)
 
