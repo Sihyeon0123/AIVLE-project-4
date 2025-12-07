@@ -99,6 +99,7 @@ build/
 
 ### H2 DB
 *.mv.db
+*.trace.db
 
 ### ⚠️API 키, JWT Secret 정보가 포함된 파일
 application-secret.yaml

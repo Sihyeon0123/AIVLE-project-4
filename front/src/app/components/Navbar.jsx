@@ -7,7 +7,6 @@ export default function MainNavbar() {
   const [isLoggedIn, setIsLoggedIn] = useState(false);
 
   useEffect(() => {
-    // 브라우저 환경에서만 실행됨 → localStorage 안전하게 접근 가능
     const token = localStorage.getItem("accessToken");
     setIsLoggedIn(!!token);
   }, []);
