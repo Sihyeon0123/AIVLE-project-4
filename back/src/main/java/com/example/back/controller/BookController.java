@@ -3,9 +3,7 @@ package com.example.back.controller;
 import java.io.File;
 
 import com.example.back.DTO.*;
-import com.example.back.jwt.JwtUtil;
 import com.example.back.service.BookService;
-import jakarta.servlet.http.HttpServletRequest;
 import org.springframework.core.io.FileSystemResource;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
@@ -23,7 +21,6 @@ import lombok.extern.slf4j.Slf4j;
 public class BookController {
     private final BookService bookService;
     private final String coverPath = "./uploads/bookcovers/";
-    private final JwtUtil jwtUtil;
 
     @GetMapping("/cover/{bookId}")
     @SuppressWarnings("null")

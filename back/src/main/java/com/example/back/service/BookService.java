@@ -4,7 +4,7 @@ import com.example.back.DTO.*;
 import com.example.back.entity.Book;
 import com.example.back.entity.Category;
 import com.example.back.entity.User;
-import com.example.back.jwt.JwtUtil;
+
 import com.example.back.repository.BookRepository;
 import com.example.back.repository.CategoryRepository;
 import com.example.back.repository.UserRepository;
@@ -23,7 +23,6 @@ public class BookService {
     private final BookRepository bookRepository;
     private final UserRepository userRepository;
     private final CategoryRepository categoryRepository;
-    private JwtUtil jwtUtil;
 
     public BookListResponse getBooks(int page, int size) {
         /**
