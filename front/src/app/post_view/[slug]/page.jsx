@@ -156,7 +156,7 @@ export default function PostView(props){
                     owner_id:response_body.data.ownerUser,
                     owner_nickname:owner_nickname,
                     updated_at:response_body.data.updatedAt,
-                    cover_img_url:`http://localhost:8080/api/books/cover/${idx}`,
+                    cover_img_url:response_body.data.imageUrl,
                     content:response_body.data.content
                 });
                 // 작성자 여부 반영

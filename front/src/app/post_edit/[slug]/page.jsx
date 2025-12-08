@@ -42,6 +42,7 @@ export default function PostEdit(props){
         title:'',
         categoryId:-1,
         description:'',
+        imageUrl:'',
         content:''
     });
 
@@ -98,6 +99,7 @@ export default function PostEdit(props){
                     categoryId: response_body.data.categoryId,
                     title:response_body.data.title,
                     description:response_body.data.description,
+                    imageUrl:response_body.data.imageUrl,
                     content:response_body.data.content
                 });
             } else {
@@ -138,6 +140,7 @@ export default function PostEdit(props){
             categoryId: bookData.categoryId,
             title: bookData.title,
             description: bookData.description,
+            imageUrl: bookData.imageUrl,
             content: bookData.content
         }
         console.log(payload);
