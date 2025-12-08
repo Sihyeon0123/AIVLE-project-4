@@ -2,27 +2,53 @@
 
 import { useEffect } from 'react';
 import { useRouter } from 'next/navigation';
-import api from '../api/apiClient'; // ← apiClient 가져오기
+import api from '../api/apiClient';
 
 export default function LogoutPage() {
   const router = useRouter();
 
   useEffect(() => {
     const doLogout = async () => {
+      const token = localStorage.getItem("accessToken");
+
+      // 1) 로그인 안 된 상태에서 /logout 접근한 경우
+      if (!token) {
+
+        // 전역 토스트 즉시 출력
+        window.dispatchEvent(
+          new CustomEvent("show-toast", {
+            detail: {
+              msg: "로그아웃된 상태입니다.",
+              type: "danger",
+            },
+          })
+        );
+
+        // 레이아웃이 유지되므로 토스트가 사라지지 않음
+        router.replace("/");
+        return;
+      }
+
+      // 2) 정상 로그아웃 처리
       try {
-        // 1) 백엔드 로그아웃 API 요청
-        // - apiClient는 자동으로 accessToken을 붙임
         await api.post('/auth/logout');
-
       } catch (err) {
-        console.error('로그아웃 요청 중 오류:', err);
-
+        console.error("로그아웃 요청 중 오류:", err);
       } finally {
-        // 2) localStorage, sessionStorage 정리
-        localStorage.removeItem('accessToken');
-        
-        // 3) 강제 새로고침(쿠키 초기화 + Navbar 갱신용)
-        window.location.href = '/';
+        localStorage.removeItem("accessToken");
+        sessionStorage.clear();
+
+        // 전역 토스트 즉시 출력
+        window.dispatchEvent(
+          new CustomEvent("show-toast", {
+            detail: {
+              msg: "로그아웃 성공!",
+              type: "success",
+            },
+          })
+        );
+
+        router.replace('/');
       }
     };
 

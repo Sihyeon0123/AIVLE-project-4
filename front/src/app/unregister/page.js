@@ -10,16 +10,11 @@ export default function UnregisterPage() {
   const [pw, setPw] = useState('');
   const router = useRouter();
 
-  // Toast 상태
+  // 페이지 내부에서만 쓰는 Toast (비밀번호 미입력 등)
   const [toastMsg, setToastMsg] = useState('');
   const [toastType, setToastType] = useState('danger');
   const [showToast, setShowToast] = useState(false);
 
-  // Confirm 상태
-  const [showConfirm, setShowConfirm] = useState(false);
-  const [confirmResolver, setConfirmResolver] = useState(null);
-
-  // Toast 출력 함수
   const showToastBox = (msg, type = 'danger') => {
     setToastMsg(msg);
     setToastType(type);
@@ -27,30 +22,43 @@ export default function UnregisterPage() {
     setTimeout(() => setShowToast(false), 3000);
   };
 
-  // Promise 기반 confirm 모달
-  const showConfirmModal = () => {
-    return new Promise((resolve) => {
+  // Confirm 모달 상태
+  const [showConfirm, setShowConfirm] = useState(false);
+  const [confirmResolver, setConfirmResolver] = useState(null);
+
+  const showConfirmModal = () =>
+    new Promise((resolve) => {
       setShowConfirm(true);
       setConfirmResolver(() => resolve);
     });
-  };
 
   const handleConfirm = () => {
-    setShowConfirm(false);
     if (confirmResolver) confirmResolver(true);
+    setShowConfirm(false);
   };
 
   const handleCancel = () => {
-    setShowConfirm(false);
     if (confirmResolver) confirmResolver(false);
+    setShowConfirm(false);
   };
 
-  // 페이지 접근 시 토큰 체크
+  // 페이지 접근 시 AccessToken 확인
   useEffect(() => {
     const token = localStorage.getItem("accessToken");
+
     if (!token) {
-      localStorage.setItem('redirectToast', '로그인이 필요한 페이지입니다.');
-      router.replace('/');
+      // 전역 ToastContainer에 바로 이벤트 쏘기
+      window.dispatchEvent(
+        new CustomEvent("show-toast", {
+          detail: {
+            msg: "로그인이 필요한 페이지입니다.",
+            type: "danger",
+          },
+        })
+      );
+
+      // 화면만 메인으로 교체 (레이아웃/토스트는 그대로 유지)
+      router.replace("/");
     }
   }, [router]);
 
@@ -64,7 +72,6 @@ export default function UnregisterPage() {
       return;
     }
 
-    // Confirm 모달 실행
     const ok = await showConfirmModal();
     if (!ok) return;
 
@@ -72,11 +79,21 @@ export default function UnregisterPage() {
       const res = await api.post('/auth/delete', { pw: trimmedPw });
 
       if (res.data.status === 'success') {
-        localStorage.setItem('redirectToast', '회원탈퇴가 완료되었습니다.');
+        // 전역 토스트로 성공 메시지
+        window.dispatchEvent(
+          new CustomEvent("show-toast", {
+            detail: {
+              msg: "회원탈퇴가 완료되었습니다.",
+              type: "success",
+            },
+          })
+        );
 
+        // 토큰 및 기타 클라이언트 상태 제거
         localStorage.clear();
         sessionStorage.clear();
 
+        // 메인 화면으로 이동 (토스트는 계속 보임)
         router.push('/');
         return;
       }
@@ -92,12 +109,11 @@ export default function UnregisterPage() {
   return (
     <div className="page">
 
-      {/* Toast UI */}
+      {/* 이 페이지 안에서만 쓰는 Toast UI */}
       <div style={{ position: 'fixed', top: '20px', right: '20px', zIndex: 9999 }}>
         <Toast show={showToast} type={toastType} message={toastMsg} />
       </div>
 
-      {/* Confirm 모달 UI */}
       <ConfirmModal
         show={showConfirm}
         title="⚠️ 회원탈퇴 확인"
@@ -127,7 +143,7 @@ export default function UnregisterPage() {
               marginTop: '20px',
               width: '100%',
               color: 'white',
-              backgroundColor: 'red'
+              backgroundColor: 'red',
             }}
           >
             회원탈퇴

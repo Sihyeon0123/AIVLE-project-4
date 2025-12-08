@@ -12,7 +12,7 @@ export default function Toast({ show, type, message }) {
     <div
       style={{
         position: 'fixed',
-        top: '20px',
+        top: '60px',
         right: '20px',
         zIndex: 2000,
         minWidth: '240px'

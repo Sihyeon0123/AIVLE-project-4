@@ -3,21 +3,30 @@
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import useMyInfo from './useMyInfo';
-import Toast from '@/app/components/Toast';
 
 export default function MyInfoPage() {
   const router = useRouter();
 
-  // 🚨 페이지 접근 시 AccessToken 검사
+  // 페이지 접근 시 AccessToken 검사
   useEffect(() => {
     const accessToken = localStorage.getItem('accessToken');
 
     if (!accessToken) {
-      // 토큰이 없으면 홈으로 이동
-      window.location.href = '/';
+      // 전역 토스트 사용
+      window.dispatchEvent(
+        new CustomEvent("show-toast", {
+          detail: {
+            msg: "로그아웃된 상태입니다.",
+            type: "danger",
+          },
+        })
+      );
+
+      router.replace('/');
       return;
     }
-  }, []);
+
+  }, [router]);
 
   const {
     userId,
@@ -32,17 +41,13 @@ export default function MyInfoPage() {
     setPwCheck,
     handleUpdate
   } = useMyInfo();
-
-  // ⭐ Toast 상태
-  const [toastMsg, setToastMsg] = useState('');
-  const [toastType, setToastType] = useState('success');
-  const [showToast, setShowToast] = useState(false);
-
+  
   const showToastMsg = (msg, type = 'danger') => {
-    setToastMsg(msg);
-    setToastType(type);
-    setShowToast(true);
-    setTimeout(() => setShowToast(false), 3000);
+    window.dispatchEvent(
+      new CustomEvent("show-toast", {
+        detail: { msg, type },
+      })
+    );
   };
 
   const onSubmit = async (e) => {
@@ -55,17 +60,14 @@ export default function MyInfoPage() {
 
     const ok = await handleUpdate();
     if (ok) {
-      showToastMsg('회원정보가 성공적으로 수정되었습니다.', 'success');
+      showToastMsg("회원정보가 성공적으로 수정되었습니다.", "success");
     } else {
-      showToastMsg('회원정보 수정에 실패했습니다.', 'danger');
+      showToastMsg("회원정보 수정에 실패했습니다.", "danger");
     }
   };
 
   return (
     <div className="page">
-      {/* Toast UI */}
-      <Toast show={showToast} type={toastType} message={toastMsg} />
-
       <div className="card">
         <h2 className="card-title">회원정보 수정</h2>
 
