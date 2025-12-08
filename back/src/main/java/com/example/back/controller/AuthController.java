@@ -170,6 +170,7 @@ public class AuthController {
     @PatchMapping("/update")
     public ResponseEntity<?> updateUser(
             @RequestHeader("Authorization") String authHeader,
+            @RequestHeader(value = "API-KEY", required = false) String apiKey, 
             @RequestBody UpdateRequest req
     ) {
         /**
@@ -183,6 +184,7 @@ public class AuthController {
          *
          * Request Header:
          *   Authorization: Bearer JWT_ACCESS_TOKEN
+         *   API-KEY: apikey 값
          *
          * Request Body JSON:
          *   {
@@ -195,7 +197,7 @@ public class AuthController {
         String token = authHeader.replace("Bearer ", "");
 
         // 서비스에 업데이트 요청
-        authService.updateUser(token, req);
+        authService.updateUser(token, req, apiKey);
 
         log.info("회원정보 수정 완료");
 

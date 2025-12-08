@@ -201,18 +201,18 @@ public class AuthService {
     }
     
     @Transactional
-    public void updateUser(String token, UpdateRequest req) {
+    public void updateUser(String token, UpdateRequest req, String apiKey) {
         /**
          * 회원정보 수정 서비스 로직
          * - token -> userId 추출
          * - 사용자 조회
-         * - 전달된 name, pw, apikey 중 존재하는 값만 업데이트
+         * - 전달된 name, pw, apiKey 중 존재하는 값만 업데이트
          */
 
         log.info("회원정보 수정 처리 시작");
 
         // 1) JWT에서 userId 추출
-        String userId = jwtUtil.getUserId(token); 
+        String userId = jwtUtil.getUserId(token);
 
         if (userId == null || userId.isBlank()) {
             throw new IllegalArgumentException("유효하지 않은 토큰입니다.");
@@ -222,21 +222,24 @@ public class AuthService {
         User user = userRepository.findById(userId)
                 .orElseThrow(() -> new RuntimeException("사용자를 찾을 수 없습니다."));
 
-        // 3) 수정할 필드만 업데이트
+        // 3-1) 이름 변경 (req 기반)
         if (req.getName() != null && !req.getName().isBlank()) {
             user.setName(req.getName());
             log.info("사용자 이름 변경: {}", req.getName());
         }
 
+        // 3-2) 비밀번호 변경 (req 기반)
         if (req.getPw() != null && !req.getPw().isBlank()) {
             String encodedPw = passwordEncoder.encode(req.getPw());
             user.setPw(encodedPw);
             log.info("사용자 비밀번호 변경");
         }
 
-        if (req.getApikey() != null && !req.getApikey().isBlank()) {
-            user.setApiKey(req.getApikey());
-            log.info("사용자 API Key 변경");
+        // 3-3) API Key 변경 
+        log.info("사용자 API Key: {}", apiKey);
+        if (apiKey != null && !apiKey.isBlank()) {
+            user.setApiKey(apiKey);
+            log.info("사용자 API Key 변경: {}", apiKey);
         }
 
         // 4) 저장
