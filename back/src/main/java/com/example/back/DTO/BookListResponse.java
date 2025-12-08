@@ -14,11 +14,13 @@ public class BookListResponse {
 
     private int page;
     private int totalPages;
+    private long totalItems;
     private List<BookItem> books;
 
-    public BookListResponse(int page, int totalPages, List<BookItem> books) {
+    public BookListResponse(int page, int totalPages, long totalItems, List<BookItem> books) {
         this.page = page;
         this.totalPages = totalPages;
+        this.totalItems = totalItems;
         this.books = books;
     }
 
@@ -48,6 +50,7 @@ public class BookListResponse {
         return new BookListResponse(
                 pageResult.getNumber(),
                 pageResult.getTotalPages(),
+                pageResult.getTotalElements(),
                 pageResult.getContent().stream()
                         .map(BookItem::new)
                         .toList()

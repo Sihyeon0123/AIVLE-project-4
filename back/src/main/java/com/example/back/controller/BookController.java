@@ -97,6 +97,48 @@ public class BookController {
         );
     }
 
+    @GetMapping("/search")
+    public ResponseEntity<ApiResponse<BookListResponse>> searchBooksByTitle(
+            @RequestParam String title,
+            @RequestParam(defaultValue = "1") int page,
+            @RequestParam(defaultValue = "10") int size
+    ) {
+        /**
+         * 도서 제목 검색 API (GET)
+         *
+         * <동작 개요>
+         * - 입력받은 제목 키워드를 기준으로 도서 목록을 검색하고, 페이지 정보를 포함하여 결과를 반환한다.
+         *
+         * 요청 정보
+         * - @RequestParam String title
+         *   : 검색할 도서 제목 키워드
+         * - @RequestParam int page
+         *   : 조회할 페이지 번호 (기본값 1, 프론트 기준)
+         * - @RequestParam int size
+         *   : 한 페이지당 조회할 도서 수 (기본값 10)
+         *
+         * 응답 형식 (ResponseEntity<ApiResponse<BookListResponse>>)
+         * - 200: 도서 제목 검색 성공
+         * - 400: 검색어 미입력, 잘못된 페이지 요청 등 잘못된 요청
+         * - 500: 서버 내부 오류 발생 시
+         */
+        log.info("도서 제목 검색 요청: title={}, page={}, size={}", title, page - 1, size);
+
+        // page는 프론트 기준 1부터, 서비스/DB는 0부터 사용하므로 -1
+        BookListResponse data = bookService.searchBooksByTitle(title, page - 1, size);
+
+        log.info("도서 제목 검색 성공: title={}, page={}, totalPages={}",
+                title, data.getPage(), data.getTotalPages());
+
+        return ResponseEntity.ok(
+                new ApiResponse<>(
+                        "success",
+                        "도서제목검색성공",
+                        data
+                )
+        );
+    }
+
     @GetMapping("/detail/{bookId}")
     public ResponseEntity<ApiResponse<BookDetailResponse>> getBookDetail(
             @PathVariable Long bookId

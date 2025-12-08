@@ -50,6 +50,30 @@ public class BookService {
         return BookListResponse.from(result);
     }
 
+    public BookListResponse searchBooksByTitle(String title, int page, int size) {
+        /**
+         * 도서 제목으로 검색 (부분 일치, 대소문자 구분 없음)
+         *
+         * @param title 검색할 제목 키워드
+         * @param page  0부터 시작하는 페이지 인덱스
+         * @param size  페이지당 조회 수
+         * @return BookListResponse (페이지 정보 + 도서 목록)
+         */
+        log.info("도서 제목 검색 서비스 시작: title={}, page={}, size={}", title, page, size);
+
+        if (title == null || title.isBlank()) {
+            log.warn("도서 제목 검색 실패 - 잘못된 검색어: title 비어 있음");
+            throw new IllegalArgumentException("검색어(title)가 올바르지 않습니다.");
+        }
+
+        Pageable pageable = PageRequest.of(page, size);
+        Page<Book> result = bookRepository.findByTitleContainingIgnoreCase(title.trim(), pageable);
+
+        log.info("도서 제목 검색 서비스 완료: title={}, totalElements={}", title, result.getTotalElements());
+
+        return BookListResponse.from(result);
+    }
+
     public BookDetailResponse getBookDetail(Long bookId) {
         /**
          * 도서 상세 조회 (GET)
