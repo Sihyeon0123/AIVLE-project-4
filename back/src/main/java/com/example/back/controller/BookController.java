@@ -118,7 +118,6 @@ public class BookController {
          */
         log.info("도서 상세 조회 요청: bookId={}", bookId);
 
-        // ✅ 예외 발생 시 GlobalExceptionHandler가 처리
         BookDetailResponse data = bookService.getBookDetail(bookId);
 
         log.info("도서 상세 조회 성공: bookId={}", bookId);
@@ -159,7 +158,6 @@ public class BookController {
          */
         log.info("도서 등록 요청: userId={}, title={}", userId, req.getTitle());
 
-        // ✅ 예외 발생 시 GlobalExceptionHandler가 처리
         BookCreateResponse data = bookService.createBook(userId, req);
 
         log.info("도서 등록 성공: bookId={}", data.getBookId());
@@ -232,13 +230,11 @@ public class BookController {
          */
         log.info("도서 삭제 요청: path bookId={}", bookId);
 
-        // 바디에 bookId가 들어왔다면, path와 다를 때만 경고 로그 남김 (로깅 용도)
         if (body != null && body.getBookId() != null
                 && !body.getBookId().equals(bookId)) {
             log.warn("삭제 요청 bookId 불일치: path={}, body={}", bookId, body.getBookId());
         }
 
-        // ✅ 예외 발생 시 GlobalExceptionHandler가 처리
         DeleteBookResponse result = bookService.deleteBook(userId, bookId);
 
         log.info("도서 삭제 성공: bookId={}", bookId);

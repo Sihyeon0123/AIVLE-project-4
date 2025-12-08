@@ -121,6 +121,7 @@ public class BookService {
         book.setTitle(req.getTitle());
         book.setDescription(req.getDescription());
         book.setContent(req.getContent());
+        book.setImageUrl(req.getImageUrl());
 
         // 5) 저장
         Book saved = bookRepository.save(book);
@@ -199,6 +200,7 @@ public class BookService {
         book.setTitle(req.getTitle());
         book.setDescription(req.getDescription());
         book.setContent(req.getContent());
+        book.setImageUrl(req.getImageUrl());
 
         // 7) 저장 (또는 @Transactional + 더티 체킹으로 자동 반영)
         Book saved = bookRepository.save(book);
