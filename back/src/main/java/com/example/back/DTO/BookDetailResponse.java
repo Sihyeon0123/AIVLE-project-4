@@ -51,7 +51,7 @@ public class BookDetailResponse {
                 .description(book.getDescription())
                 .content(book.getContent())
                 .categoryId(book.getCategory().getId())
-                .imageUrl(null)
+                .imageUrl(book.getImageUrl())
                 .ownerUser(book.getUser().getId())
                 .createdAt(book.getCreated_at())
                 .updatedAt(book.getUpdated_at())

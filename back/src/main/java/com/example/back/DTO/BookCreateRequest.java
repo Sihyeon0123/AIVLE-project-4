@@ -10,4 +10,5 @@ public class BookCreateRequest {
     private String description;
     private String content;
     private Long categoryId;
+    private String imageUrl;
 }

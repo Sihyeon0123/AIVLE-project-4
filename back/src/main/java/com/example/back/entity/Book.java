@@ -35,6 +35,9 @@ public class Book {
     @Column(nullable = false, length = 1000)
     private String content; // 작품 내용
 
+    @Column(name = "image_url", length = 500)
+    private String imageUrl;   // AI 생성 표지 이미지 URL
+
     @CreationTimestamp
     @Column(name = "created_at")
     private LocalDateTime created_at;
