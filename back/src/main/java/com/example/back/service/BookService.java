@@ -14,6 +14,7 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 
 @Service
@@ -50,6 +51,16 @@ public class BookService {
     }
 
     // TODO: 도서 상세 정보 조회 (GET)
+    /**
+     * 도서 상세 조회
+     */
+    public BookDetailResponse getBookDetail(Long bookId) {
+
+        Book book = bookRepository.findById(bookId)
+                .orElseThrow(() -> new IllegalArgumentException("도서를 찾을 수 없습니다."));
+
+        return BookDetailResponse.from(book);
+    }
 
 
     @SuppressWarnings("null")
@@ -191,5 +202,29 @@ public class BookService {
     }
 
     // TODO: 도서 삭제 (DELETE)
+    /**
+     * 도서 삭제 서비스 로직
+     * 1) bookId로 도서를 조회
+     * 2) 없으면 IllegalArgumentException 던져서 404 처리
+     * 3) 있으면 삭제 후 DeleteBookResponse 반환
+     */
+    @Transactional
+    public DeleteBookResponse deleteBook(String userId, Long bookId) {
+
+        // 1) 도서 조회
+        Book book = bookRepository.findById(bookId)
+                .orElseThrow(() -> new IllegalArgumentException("도서를 찾을 수 없습니다."));
+
+        // 2) 소유자 체크 (작성자와 요청한 유저가 같은지)
+        if (!book.getUser().getId().equals(userId)) {
+            throw new RuntimeException("본인이 등록한 도서만 삭제할 수 있습니다.");
+        }
+
+        // 3) 삭제 진행
+        bookRepository.delete(book);
+
+        // 4) 결과 반환
+        return new DeleteBookResponse(bookId, 1);
+    }
 
 }

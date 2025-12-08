@@ -40,7 +40,9 @@ public class SecurityConfig {
                 .requestMatchers(
                     "/api/auth/logout",
                     "/api/auth/update",
-                    "/api/auth/delete"
+                    "/api/auth/delete",
+                    "/api/books",
+                    "/api/books/*"
                 ).authenticated()
                 .anyRequest().permitAll()
             )

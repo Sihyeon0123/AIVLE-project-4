@@ -114,6 +114,52 @@ public class BookController {
     }
 
     // TODO: 도서 상세 정보 조회 (GET)
+    /**
+     * 도서 상세 조회
+     * GET /api/books/{bookId}
+     */
+    @GetMapping("/detail/{bookId}")
+    public ResponseEntity<ApiResponse<BookDetailResponse>> getBookDetail(
+            @PathVariable Long bookId
+    ) {
+        log.info("도서 상세 조회 요청: bookId={}", bookId);
+
+        try {
+            BookDetailResponse data = bookService.getBookDetail(bookId);
+
+            log.info("도서 상세 조회 성공: bookId={}", bookId);
+
+            return ResponseEntity.ok(
+                    new ApiResponse<>(
+                            "success",
+                            "도서 상세 조회 성공",
+                            data
+                    )
+            );
+
+        } catch (IllegalArgumentException e) {
+            log.warn("도서 상세 조회 실패 - 잘못된 요청: bookId={}, msg={}", bookId, e.getMessage());
+
+            return ResponseEntity.status(404).body(
+                    new ApiResponse<>(
+                            "error",
+                            "도서를 찾을 수 없습니다.",
+                            null
+                    )
+            );
+
+        } catch (Exception e) {
+            log.error("도서 상세 조회 서버 오류: bookId={}, error={}", bookId, e.toString());
+
+            return ResponseEntity.status(500).body(
+                    new ApiResponse<>(
+                            "error",
+                            "서버 내부 오류가 발생했습니다. 관리자에게 문의하세요.",
+                            null
+                    )
+            );
+        }
+    }
 
 
     @PostMapping
@@ -234,6 +280,67 @@ public class BookController {
     }
 
     // TODO: 도서 삭제 (DELETE)
+    /**
+     * 도서 삭제
+     * DELETE /api/books/{bookId}
+     * - 헤더: Authorization: Bearer JWT_ACCESS_TOKEN
+     * - 바디(JSON): { "bookId": 1 }  (선택, path와 일치 여부만 체크)
+     */
+    @DeleteMapping("/{bookId}")
+    public ResponseEntity<ApiResponse<DeleteBookResponse>> deleteBook(
+            @RequestAttribute("userId") String userId,   // ★ 토큰에서 꺼낸 유저 ID
+            @PathVariable Long bookId,
+            @RequestBody(required = false) DeleteBookRequest body
+    ) {
+        log.info("도서 삭제 요청: path bookId={}", bookId);
+
+        try {
+            // 바디에 bookId가 들어왔다면, path랑 다를 때만 경고 로그 남김
+            if (body != null && body.getBookId() != null
+                    && !body.getBookId().equals(bookId)) {
+                log.warn("삭제 요청 bookId 불일치: path={}, body={}",
+                        bookId, body.getBookId());
+            }
+
+            // 서비스에서 실제 삭제 수행
+            DeleteBookResponse result = bookService.deleteBook(userId, bookId);
+
+            log.info("도서 삭제 성공: bookId={}", bookId);
+
+            // 명세의 200 응답 형태로 반환
+            return ResponseEntity.ok(
+                    new ApiResponse<>(
+                            "success",
+                            "도서삭제성공",
+                            result
+                    )
+            );
+
+        } catch (IllegalArgumentException e) {
+            // 존재하지 않는 도서일 때 404 처리
+            log.warn("도서 삭제 실패 - 도서 없음: bookId={}, msg={}",
+                    bookId, e.getMessage());
+
+            return ResponseEntity.status(404)
+                    .body(new ApiResponse<>(
+                            "error",
+                            "도서를 찾을 수 없습니다.",
+                            null
+                    ));
+
+        } catch (Exception e) {
+            // 기타 서버 오류
+            log.error("도서 삭제 서버 오류: bookId={}, error={}",
+                    bookId, e.toString());
+
+            return ResponseEntity.status(500)
+                    .body(new ApiResponse<>(
+                            "error",
+                            "서버 내부 오류가 발생했습니다. 관리자에게 문의하세요.",
+                            null
+                    ));
+        }
+    }
 
 
 }
