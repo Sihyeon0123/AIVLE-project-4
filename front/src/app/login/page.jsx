@@ -1,11 +1,30 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { loginRequest } from './login';
 
 export default function LoginPage() {
   const [id, setId] = useState('');
   const [pw, setPw] = useState('');
+
+  // Bootstrap Alert 상태
+  const [alertMsg, setAlertMsg] = useState('');
+  const [alertType, setAlertType] = useState('success'); // success | danger
+  const [showAlert, setShowAlert] = useState(false);
+
+  // 회원가입 성공 메시지(sessionStorage) 읽기
+  useEffect(() => {
+    const msg = sessionStorage.getItem('signupSuccessMsg');
+    if (msg) {
+      setAlertMsg(msg);
+      setAlertType('success'); // 초록색 박스
+      setShowAlert(true);
+
+      sessionStorage.removeItem('signupSuccessMsg');
+
+      setTimeout(() => setShowAlert(false), 3000);
+    }
+  }, []);
 
   const handleLogin = async (e) => {
     e.preventDefault();
@@ -13,10 +32,8 @@ export default function LoginPage() {
     try {
       const { result, accessToken } = await loginRequest(id, pw);
 
-      // 로그인 성공
+      // 로그인 성공 → Alert 없이 바로 리다이렉트
       if (result.status === 'success') {
-        alert(`로그인 성공!\n메시지: ${result.message || '성공'}\n코드: 200`);
-
         if (accessToken) {
           localStorage.setItem('accessToken', accessToken);
         }
@@ -25,23 +42,28 @@ export default function LoginPage() {
         return;
       }
 
-      // success가 아닌 경우
-      alert(`로그인 실패\n메시지: ${result.message}\n코드: ???`);
+      // 로그인 실패 → 붉은 Alert 표시
+      setAlertMsg(result.message || '로그인 실패');
+      setAlertType('danger');
+      setShowAlert(true);
+
     } catch (error) {
       console.error(error);
 
-      // 서버 응답이 있는 경우 (401/404 등)
+      // 서버 응답이 있는 경우
       if (error.response) {
         const { status, data } = error.response;
 
-        alert(
-          `로그인 실패\n메시지: ${data?.message || '오류 발생'}\n코드: ${status}`
-        );
+        setAlertMsg(data?.message || `오류 발생 (코드: ${status})`);
+        setAlertType('danger');
+        setShowAlert(true);
         return;
       }
 
-      // 서버가 아예 응답을 못 준 경우 (네트워크 문제)
-      alert(`서버와 통신 중 오류가 발생했습니다.\n메시지: ${error.message}`);
+      // 네트워크 오류
+      setAlertMsg('서버와 통신 중 오류가 발생했습니다.');
+      setAlertType('danger');
+      setShowAlert(true);
     }
   };
 
@@ -49,6 +71,13 @@ export default function LoginPage() {
     <div className="page">
       <div className="card">
         <h2 className="card-title">로그인</h2>
+
+        {/* 회원가입 성공 & 로그인 실패 메시지 출력 */}
+        {showAlert && (
+          <div className={`alert alert-${alertType}`} role="alert">
+            {alertMsg}
+          </div>
+        )}
 
         <form className="form" onSubmit={handleLogin}>
           <label>

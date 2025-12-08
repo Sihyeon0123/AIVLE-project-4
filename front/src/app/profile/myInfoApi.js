@@ -9,7 +9,3 @@ export const updateUserInfo = (body, apiKey) => {
     headers: { 'API-KEY': apiKey }
   });
 };
-
-export const deleteUser = (pw) => {
-  return api.post('/auth/delete', { pw });
-};

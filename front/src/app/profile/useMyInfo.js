@@ -81,27 +81,9 @@ export default function useMyInfo() {
     return false;
   };
 
-  // ==========================
-  // 3) 회원 탈퇴
-  // ==========================
-  const handleDelete = async () => {
-    const trimmedPw = pw.trim();
-    if (!trimmedPw) {
-      alert('비밀번호를 입력해주세요.');
-      return false;
-    }
-
-    const ok = window.confirm('정말 탈퇴하시겠습니까?');
-    if (!ok) return false;
-
-    const res = await deleteUser(trimmedPw);
-    return res.data.status === 'success';
-  };
-
   return {
     userId,
     userName,
-    originalName,
     apiKey,
     pw,
     pwCheck,
@@ -110,6 +92,5 @@ export default function useMyInfo() {
     setPw,
     setPwCheck,
     handleUpdate,
-    handleDelete
   };
 }

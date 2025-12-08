@@ -8,9 +8,22 @@ export default function SignupPage() {
   const [pw, setPw] = useState('');
   const [pwCheck, setPwCheck] = useState('');
   const [name, setName] = useState('');
-  const [apiKey, setApiKey] = useState(''); 
+  const [apiKey, setApiKey] = useState('');
+
+  // Bootstrap Alert 상태 (실패용)
+  const [alertMsg, setAlertMsg] = useState('');
+  const [alertType, setAlertType] = useState('');
+  const [showAlert, setShowAlert] = useState(false);
 
   const router = useRouter();
+
+  const showBootstrapAlert = (msg, type = 'danger') => {
+    setAlertMsg(msg);
+    setAlertType(type);
+    setShowAlert(true);
+
+    setTimeout(() => setShowAlert(false), 3000);
+  };
 
   const handleSignup = async (e) => {
     e.preventDefault();
@@ -19,23 +32,18 @@ export default function SignupPage() {
     const trimmedName = name.trim();
     const trimmedApiKey = apiKey.trim();
 
-    // 필수값 검사
     if (!trimmedId || !pw.trim() || !trimmedName) {
-      alert('아이디, 비밀번호, 이름을 모두 입력해주세요.');
+      showBootstrapAlert('아이디, 비밀번호, 이름을 모두 입력해주세요.');
       return;
     }
 
-    // 비밀번호 확인 검사
     if (pw !== pwCheck) {
-      alert('비밀번호가 일치하지 않습니다.');
+      showBootstrapAlert('비밀번호가 일치하지 않습니다.');
       return;
     }
 
     try {
-      // API KEY 유무에 따라 동적으로 헤더 구성
-      const headers = {
-        'Content-Type': 'application/json',
-      };
+      const headers = { 'Content-Type': 'application/json' };
 
       if (trimmedApiKey) {
         headers['API-KEY'] = trimmedApiKey;
@@ -52,18 +60,24 @@ export default function SignupPage() {
       });
 
       const result = await res.json();
-      console.log('회원가입 서버 응답:', result);
 
+      // 성공 시: 회원가입 페이지에서는 Alert를 띄우지 않음
       if (res.ok && result.status === 'success') {
-        alert(result.message || '회원가입 성공! 이제 로그인 해주세요.');
+        sessionStorage.setItem(
+          'signupSuccessMsg',
+          result.message || '회원가입 성공!'
+        );
+
         router.push('/login');
         return;
       }
 
-      alert(result.message || '회원가입 실패');
+      // 실패 시에만 Alert 표시
+      showBootstrapAlert(result.message || '회원가입 실패');
+
     } catch (error) {
       console.error('회원가입 요청 오류:', error);
-      alert('서버와 통신 중 오류가 발생했습니다.');
+      showBootstrapAlert('서버와 통신 중 오류가 발생했습니다.');
     }
   };
 
@@ -71,6 +85,13 @@ export default function SignupPage() {
     <div className="page">
       <div className="card">
         <h1 className="card-title">회원가입</h1>
+
+        {/* 실패 메시지용 Bootstrap Alert */}
+        {showAlert && (
+          <div className={`alert alert-${alertType}`} role="alert">
+            {alertMsg}
+          </div>
+        )}
 
         <form className="form" onSubmit={handleSignup}>
           <label>
