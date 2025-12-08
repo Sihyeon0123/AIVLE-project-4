@@ -88,9 +88,6 @@ export default function MyInfoPage() {
 
           <div className="btn-row--center">
             <button className="sub-btn" type="submit">수정하기</button>
-            <button className="sub-btn" type="button" onClick={onDelete}>
-              회원 탈퇴
-            </button>
           </div>
         </form>
       </div>

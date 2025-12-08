@@ -46,6 +46,10 @@ export default function MainNavbar() {
             <>
               <NavDropdown.Item href="/profile">내 정보</NavDropdown.Item>
               <NavDropdown.Item href="/logout">로그아웃</NavDropdown.Item>
+              <NavDropdown.Divider />
+              <NavDropdown.Item href="/unregister" style={{ color: 'red' }}>
+                회원탈퇴
+              </NavDropdown.Item>
             </>
           )}
           {!isLoggedIn && (

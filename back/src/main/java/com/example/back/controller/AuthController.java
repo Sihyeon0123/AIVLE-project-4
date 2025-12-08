@@ -209,7 +209,8 @@ public class AuthController {
     @PostMapping("/delete")
     public ResponseEntity<?> deleteUser(
             @RequestHeader("Authorization") String authorizationHeader,
-            @RequestBody DeleteRequest req) {
+            @RequestBody DeleteRequest req,
+            HttpServletResponse response) {
         /**
          * 회원 탈퇴 API
          * - Authorization 헤더에서 JWT 토큰 추출
@@ -233,6 +234,15 @@ public class AuthController {
 
         // 서비스 호출
         authService.deleteUser(token, req.getPw());
+
+        Cookie refreshCookie = new Cookie("refreshToken", null);
+        refreshCookie.setHttpOnly(true);
+        refreshCookie.setSecure(false);       
+        refreshCookie.setPath("/");           
+        refreshCookie.setMaxAge(0);
+        refreshCookie.setAttribute("SameSite", "Lax");
+
+        response.addCookie(refreshCookie);
 
         log.info("회원 탈퇴 완료");
 
