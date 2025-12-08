@@ -4,24 +4,28 @@ import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 
 export default function SignupPage() {
+  // 입력값 상태
   const [id, setId] = useState('');
   const [pw, setPw] = useState('');
   const [pwCheck, setPwCheck] = useState('');
   const [name, setName] = useState('');
   const router = useRouter();
 
-  // 🔧 타입 제거: (e: React.FormEvent) ➜ (e)
+  // 회원가입 처리
   const handleSignup = async (e) => {
     e.preventDefault();
 
+    // 공백 제거 (공백만 입력한 경우 방지)
     const trimmedId = id.trim();
     const trimmedName = name.trim();
 
-    if (!trimmedId || !pw || !trimmedName) {
+    // 필수값 공백 검사
+    if (!trimmedId || !pw.trim() || !trimmedName) {
       alert('아이디, 비밀번호, 이름을 모두 입력해주세요.');
       return;
     }
 
+    // 비밀번호 확인 검사
     if (pw !== pwCheck) {
       alert('비밀번호가 일치하지 않습니다.');
       return;
@@ -34,6 +38,7 @@ export default function SignupPage() {
     });
 
     try {
+      // 회원가입 API 요청
       const res = await fetch('http://localhost:8080/api/auth/signup', {
         method: 'POST',
         headers: {
@@ -49,16 +54,18 @@ export default function SignupPage() {
       const result = await res.json();
       console.log('회원가입 서버 응답:', result);
 
+      // 성공 처리
       if (res.ok && result.status === 'success') {
         alert(result.message || '회원가입 성공! 이제 로그인 해주세요.');
         router.push('/login');
+        return;
+      }
+
+      // 실패 처리 (백엔드가 에러 메시지를 내려준 경우)
+      if (res.status === 401) {
+        alert(result.message || '아이디가 이미 존재하거나 잘못된 요청입니다.');
       } else {
-        if (res.status === 401) {
-          // 백엔드: 중복 아이디 등 IllegalArgumentException
-          alert(result.message || '아이디가 이미 존재하거나 잘못된 요청입니다.');
-        } else {
-          alert(result.message || '회원가입 실패');
-        }
+        alert(result.message || '회원가입 실패');
       }
     } catch (error) {
       console.error('회원가입 요청 오류:', error);
@@ -71,6 +78,7 @@ export default function SignupPage() {
       <div className="card">
         <h1 className="card-title">회원가입</h1>
 
+        {/* 회원가입 폼 */}
         <form id="signupForm" className="form" onSubmit={handleSignup}>
           <label>
             아이디
