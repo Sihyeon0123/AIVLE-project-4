@@ -78,13 +78,17 @@ export default function LoginPage() {
           sessionStorage.setItem('userId', id);
         }
 
+        if (result.userName) {
+          sessionStorage.setItem('userName', result.userName);
+        }
+
         // name도 백엔드에서 보내주게 되면 아래처럼 저장 가능
         // if (result.name) {
         //   sessionStorage.setItem('userName', result.name);
         // }
 
         // 로그인 성공 후 메인 페이지로 이동
-        router.push('/');
+        window.location.href = '/';
       } else {
         // status가 success가 아닌 경우 (백엔드에서 커스텀 에러 보낸 경우)
         alert(result.message || '로그인에 실패했습니다.');
