@@ -88,33 +88,13 @@ public class BookController {
          * - 400: 잘못된 페이지 번호 등 잘못된 요청
          * - 500: 서버 내부 오류 발생 시
          */
-        log.info("도서 목록 조회 요청: page={}, size={}", page, size);
+        BookListResponse data = bookService.getBooks(page - 1, size);
 
-        try {
-            // 서비스에서 BookListResponse 하나만 리턴하도록 구현해 둔 상태라고 가정
-            BookListResponse data = bookService.getBooks(page - 1, size);
+        log.info("도서 목록 조회 성공: page={}, totalPages={}", data.getPage(), data.getTotalPages());
 
-            log.info("도서 목록 조회 성공: page={}, totalPages={}", data.getPage(), data.getTotalPages());
-
-            // 회원가입과 동일한 ApiResponse 사용 방식
-            return ResponseEntity.ok(
-                    new ApiResponse<>("success", "도서목록조회성공", data)
-            );
-
-        } catch (IllegalArgumentException e) {
-            // 잘못된 페이지 번호 등 클라이언트 잘못
-            log.warn("도서 목록 조회 실패 - 잘못된 요청: page={}, size={}, msg={}", page, size, e.getMessage());
-            return ResponseEntity.status(400).body(
-                    new ApiResponse<>("error", e.getMessage(), null)
-            );
-
-        } catch (Exception e) {
-            // 서버 내부 오류
-            log.error("도서 목록 조회 서버 오류: page={}, size={}, error={}", page, size, e.toString());
-            return ResponseEntity.status(500).body(
-                    new ApiResponse<>("error", "서버 내부 오류가 발생했습니다. 관리자에게 문의하세요.", null)
-            );
-        }
+        return ResponseEntity.ok(
+                new ApiResponse<>("success", "도서목록조회성공", data)
+        );
     }
 
     @GetMapping("/detail/{bookId}")
@@ -138,41 +118,18 @@ public class BookController {
          */
         log.info("도서 상세 조회 요청: bookId={}", bookId);
 
-        try {
-            BookDetailResponse data = bookService.getBookDetail(bookId);
+        // ✅ 예외 발생 시 GlobalExceptionHandler가 처리
+        BookDetailResponse data = bookService.getBookDetail(bookId);
 
-            log.info("도서 상세 조회 성공: bookId={}", bookId);
+        log.info("도서 상세 조회 성공: bookId={}", bookId);
 
-            return ResponseEntity.ok(
-                    new ApiResponse<>(
-                            "success",
-                            "도서 상세 조회 성공",
-                            data
-                    )
-            );
-
-        } catch (IllegalArgumentException e) {
-            log.warn("도서 상세 조회 실패 - 잘못된 요청: bookId={}, msg={}", bookId, e.getMessage());
-
-            return ResponseEntity.status(404).body(
-                    new ApiResponse<>(
-                            "error",
-                            "도서를 찾을 수 없습니다.",
-                            null
-                    )
-            );
-
-        } catch (Exception e) {
-            log.error("도서 상세 조회 서버 오류: bookId={}, error={}", bookId, e.toString());
-
-            return ResponseEntity.status(500).body(
-                    new ApiResponse<>(
-                            "error",
-                            "서버 내부 오류가 발생했습니다. 관리자에게 문의하세요.",
-                            null
-                    )
-            );
-        }
+        return ResponseEntity.ok(
+                new ApiResponse<>(
+                        "success",
+                        "도서 상세 조회 성공",
+                        data
+                )
+        );
     }
 
 
@@ -202,34 +159,14 @@ public class BookController {
          */
         log.info("도서 등록 요청: userId={}, title={}", userId, req.getTitle());
 
-        try {
-            BookCreateResponse data = bookService.createBook(userId, req);
+        // ✅ 예외 발생 시 GlobalExceptionHandler가 처리
+        BookCreateResponse data = bookService.createBook(userId, req);
 
-            log.info("도서 등록 성공: bookId={}", data.getBookId());
+        log.info("도서 등록 성공: bookId={}", data.getBookId());
 
-            return ResponseEntity.status(201).body(
-                    new ApiResponse<>("success", "도서등록완료", data)
-            );
-
-        } catch (IllegalArgumentException e) {
-            log.warn("도서 등록 실패 - 잘못된 요청: userId={}, msg={}", userId, e.getMessage());
-            return ResponseEntity.status(400).body(
-                    new ApiResponse<>("error", e.getMessage(), null)
-            );
-
-        } catch (RuntimeException e) {
-            // 사용자 없음, 카테고리 없음 등
-            log.warn("도서 등록 실패 - 인증/조회 문제: userId={}, msg={}", userId, e.getMessage());
-            return ResponseEntity.status(401).body(
-                    new ApiResponse<>("error", e.getMessage(), null)
-            );
-
-        } catch (Exception e) {
-            log.error("도서 등록 서버 오류: userId={}, error={}", userId, e.toString());
-            return ResponseEntity.status(500).body(
-                    new ApiResponse<>("error", "서버 내부 오류가 발생했습니다. 관리자에게 문의하세요.", null)
-            );
-        }
+        return ResponseEntity.status(201).body(
+                new ApiResponse<>("success", "도서등록완료", data)
+        );
     }
 
     @PutMapping("/update/{bookId}")
@@ -259,38 +196,13 @@ public class BookController {
          * - 401: 실패 사용자 정보가 없거나, 존재하지 않는 도서를 수정하려 하거나, 본인이 등록하지 않은 도서를 수정하려 할 경우 (인증/조회/권한 문제)
          * - 500: 그 외 예기치 못한 서버 내부 오류 발생 시 (서버 오류)
          */
-        log.info("도서 수정 요청: userId={}, bookId={}, title={}", userId, bookId, req.getTitle());
+        BookUpdateResponse data = bookService.updateBook(userId, bookId, req);
 
-        try {
-            BookUpdateResponse data = bookService.updateBook(userId, bookId, req);
+        log.info("도서 수정 성공: bookId={}", data.getBookId());
 
-            log.info("도서 수정 성공: bookId={}", data.getBookId());
-
-            return ResponseEntity.ok(
-                    new ApiResponse<>("success", "도서수정완료", data)
-            );
-
-        } catch (IllegalArgumentException e) {
-            // 잘못된 요청 데이터 (필수값 누락 등)
-            log.warn("도서 수정 실패 - 잘못된 요청: userId={}, bookId={}, msg={}", userId, bookId, e.getMessage());
-            return ResponseEntity.status(400).body(
-                    new ApiResponse<>("error", e.getMessage(), null)
-            );
-
-        } catch (RuntimeException e) {
-            // 사용자 없음, 도서 없음, 권한 없음, 카테고리 없음 등 도메인/인증 관련 문제
-            log.warn("도서 수정 실패 - 인증/조회/권한 문제: userId={}, bookId={}, msg={}", userId, bookId, e.getMessage());
-            return ResponseEntity.status(401).body(
-                    new ApiResponse<>("error", e.getMessage(), null)
-            );
-
-        } catch (Exception e) {
-            // 예기치 못한 서버 오류
-            log.error("도서 수정 서버 오류: userId={}, bookId={}, error={}", userId, bookId, e.toString());
-            return ResponseEntity.status(500).body(
-                    new ApiResponse<>("error", "서버 내부 오류가 발생했습니다. 관리자에게 문의하세요.", null)
-            );
-        }
+        return ResponseEntity.ok(
+                new ApiResponse<>("success", "도서수정완료", data)
+        );
     }
 
     @DeleteMapping("/delete/{bookId}")
@@ -320,53 +232,24 @@ public class BookController {
          */
         log.info("도서 삭제 요청: path bookId={}", bookId);
 
-        try {
-            // 바디에 bookId가 들어왔다면, path랑 다를 때만 경고 로그 남김
-            if (body != null && body.getBookId() != null
-                    && !body.getBookId().equals(bookId)) {
-                log.warn("삭제 요청 bookId 불일치: path={}, body={}",
-                        bookId, body.getBookId());
-            }
-
-            // 서비스에서 실제 삭제 수행
-            DeleteBookResponse result = bookService.deleteBook(userId, bookId);
-
-            log.info("도서 삭제 성공: bookId={}", bookId);
-
-            // 명세의 200 응답 형태로 반환
-            return ResponseEntity.ok(
-                    new ApiResponse<>(
-                            "success",
-                            "도서삭제성공",
-                            result
-                    )
-            );
-
-        } catch (IllegalArgumentException e) {
-            // 존재하지 않는 도서일 때 404 처리
-            log.warn("도서 삭제 실패 - 도서 없음: bookId={}, msg={}",
-                    bookId, e.getMessage());
-
-            return ResponseEntity.status(404)
-                    .body(new ApiResponse<>(
-                            "error",
-                            "도서를 찾을 수 없습니다.",
-                            null
-                    ));
-
-        } catch (Exception e) {
-            // 기타 서버 오류
-            log.error("도서 삭제 서버 오류: bookId={}, error={}",
-                    bookId, e.toString());
-
-            return ResponseEntity.status(500)
-                    .body(new ApiResponse<>(
-                            "error",
-                            "서버 내부 오류가 발생했습니다. 관리자에게 문의하세요.",
-                            null
-                    ));
+        // 바디에 bookId가 들어왔다면, path와 다를 때만 경고 로그 남김 (로깅 용도)
+        if (body != null && body.getBookId() != null
+                && !body.getBookId().equals(bookId)) {
+            log.warn("삭제 요청 bookId 불일치: path={}, body={}", bookId, body.getBookId());
         }
-    }
 
+        // ✅ 예외 발생 시 GlobalExceptionHandler가 처리
+        DeleteBookResponse result = bookService.deleteBook(userId, bookId);
+
+        log.info("도서 삭제 성공: bookId={}", bookId);
+
+        return ResponseEntity.ok(
+                new ApiResponse<>(
+                        "success",
+                        "도서삭제성공",
+                        result
+                )
+        );
+    }
 
 }

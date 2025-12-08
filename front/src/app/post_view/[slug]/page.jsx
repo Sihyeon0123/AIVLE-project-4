@@ -105,9 +105,6 @@ export default function PostView(props){
         content:''
     });
 
-    // State: 로그인 여부 판정
-    //const loggedOn = api.get
-
     // (도서 정보 조회 처리)
     const getDetails = async(idx)=>{
         //// MEMO: 일단은 하드코딩해놓은 거 사용
@@ -124,7 +121,7 @@ export default function PostView(props){
             //console.log(response_body.message);
             //console.log(response_body.data);
             //
-            // 문제가 없을 경우에는 도서 정보 입력
+            // 아무 문제 없이 진행되었으면 도서 정보 입력
             if (response_body.status === 'success') {
                 // TODO: 작성자 닉네임만 가져온다 (userNickname 확인해주는 API 필요)
                 let owner_nickname = "";
@@ -136,9 +133,13 @@ export default function PostView(props){
                     cover_img_url:response_body?.data?.imageUrl ?? "",
                     content:response_body.data.content
                 });
+            } else {
+                // (책이 존재하지 않는 경우)
+                alert("존재하지 않는 도서입니다.");
+                router.back();
             }
         } catch {
-            // 가져오는 과정에서 에러가 났거나 도서가 존재하지 않는 경우에는 뒤로 돌린다
+            // (가져오는 과정에서 에러가 발생한 경우)
             alert("도서 정보를 가져올 수 없습니다.");
             router.back();
         }
@@ -152,10 +153,21 @@ export default function PostView(props){
         });
     },[props.params]);
 
-    // TODO: 작성자 본인 여부 판정
-    // - Access Token이 있는지부터 확인
-    // - Access Token이 있으면 현재 사용자 ID가 author_id와 일치하는지 확인
-    const isOwner = true;
+    // 작성자 본인 여부 판정
+    // 1. ️로그인 때 저장해둔 accessToken 꺼내기
+    const token =
+        typeof window !== "undefined"
+            ? localStorage.getItem("accessToken")
+            : null;
+    //console.log(token);
+    // 2. 현재 사용자 ID 확인
+    const currentUserId =
+        typeof window !== "undefined"
+            ? sessionStorage.getItem("userId")
+            : null;
+    //console.log(sessionStorage.getItem('userId'));
+    // 3. 현재 사용자 ID가 author_id와 일치하는지 확인
+    const isOwner = Boolean(token && (currentUserId === bookData.owner_id));
 
     // 사용자가 작성자 본인일 경우에는 편집 메뉴 추가
     return (
