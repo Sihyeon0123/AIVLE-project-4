@@ -1,6 +1,9 @@
 package com.example.back.exception;
 
 import io.jsonwebtoken.*;
+
+import java.util.Optional;
+
 import org.springframework.dao.DataAccessException;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -38,11 +41,11 @@ public class GlobalExceptionHandler {
     @ExceptionHandler(ResponseStatusException.class)
     public ResponseEntity<?> handleResponseStatus(ResponseStatusException e) {
 
-        // ResponseStatusException은 내부적으로 statusCode와 reason을 제공함
         HttpStatus status = HttpStatus.valueOf(e.getStatusCode().value());
-        String message = (e.getReason() != null && !e.getReason().isBlank())
-                ? e.getReason()
-                : "오류가 발생했습니다.";
+
+        String message = Optional.ofNullable(e.getReason())
+                .filter(reason -> !reason.isBlank())
+                .orElse("오류가 발생했습니다.");
 
         return build(status, message);
     }
