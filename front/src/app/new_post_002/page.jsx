@@ -9,7 +9,7 @@ function Page() {
         title: "",
         description: "",
         content: "",
-        category: "",
+        categoryId: "",
     });
 
     // ========================== JWT로 개인 API Key 가져오기  ==========================
@@ -56,17 +56,19 @@ function Page() {
     };
 
     // ========================== DALL·E 이미지 생성 ==========================
-    const imageGenerate = async (data = postData) => {
-        if (!data || !data.title) {
+    const imageGenerate = async (initialData = null) => {
+        const currentData = initialData || postData;
+
+        if (!currentData || !currentData.title) {
             alert("유효한 게시물 데이터가 없습니다.");
             return;
         }
 
         const apiKey = await getUserApiKey();
-        if (!apiKey) return; // API Key를 가져오지 못했으면 중단
+        if (!apiKey) return;
 
         // DALL·E 프롬프트 구성
-        const prompt = `제목: ${data.title}, 설명: ${data.description},  앞의 내용을 기반으로 예술적인 책 표지 이미지를 생성. 표지 이미지는 ${data.category}에 맞게.`;
+        const prompt = `제목: ${currentData.title}, 설명: ${currentData.description},  앞의 내용을 기반으로 예술적인 책 표지 이미지를 생성. 표지 이미지는 ${currentData.categoryId}에 맞게.`;
 
         try {
             setImageUrl("");
@@ -108,16 +110,14 @@ function Page() {
     // ========================== 이미지 자동 생성 ==========================
     useEffect(() => {
         const fetchPostAndGenerate = async () => {
-            // localStorage에서 데이터 로드
             const tempPostData = localStorage.getItem("temp_post_data");
 
             if (tempPostData) {
                 const data = JSON.parse(tempPostData);
-                setPostData(data); // State 업데이트
+                setPostData(data); // State는 화면 렌더링을 위해 업데이트 (비동기)
 
                 console.log("임시 데이터 로드 완료. 이미지 생성 시작:", data.title);
 
-                // 데이터가 있다면 즉시 이미지 생성 함수 호출
                 imageGenerate(data);
             } else {
                 console.error("게시물 정보를 가져오지 못했습니다.");

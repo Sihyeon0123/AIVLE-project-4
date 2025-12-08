@@ -9,12 +9,12 @@ function Page() {
     const [title, setTitle] = useState("");
     const [description, setDescription] = useState("");
     const [content, setContent] = useState("");
-    const [category, setCategory] = useState("");
-    const [img , setPreviewImageUrl] = useState("");
+    const [categoryId, setCategory] = useState("");
+    const [imageUrl , setPreviewImageUrl] = useState("");
 
     const handleSubmit = async () => {
-        // ⭐ [수정 1] 유효성 검사를 먼저 수행
-        if (!title || !description || !content || !category) {
+        // 유효성 검사
+        if (!title || !description || !content || !categoryId) {
             alert("제목, 설명, 내용, 카테고리를 모두 입력해 주세요.");
             return;
         }
@@ -23,11 +23,11 @@ function Page() {
             title,
             description,
             content,
-            category,
+            categoryId,
         };
         console.log("이미지 생성을 위해 데이터 임시 저장:", postData);
 
-        // 데이터를 localStorage에 저장합니다.
+        // 데이터를 localStorage에 저장
         localStorage.setItem("temp_post_data", JSON.stringify(postData));
 
         // 새 창 열기
@@ -37,12 +37,11 @@ function Page() {
     // ======================= 게시물 게시 ========================
 
     const finalCheck = async () => {
-        if (!title || !description || !content || !category || !img) {
+        if (!title || !description || !content || !categoryId || !imageUrl) {
             alert("제목, 설명, 내용, 카테고리, 이미지 중 비어있는 곳이 존재합니다.");
             return;
         }
 
-        // JWT 토큰을 localStorage에서 가져옵니다. (키가 'jwt'라고 가정)
         const jwt = localStorage.getItem("accessToken");
         if (!jwt) {
             alert("로그인이 필요합니다.");
@@ -54,9 +53,11 @@ function Page() {
             title,
             description,
             content,
-            category,
-            img
+            categoryId: Number(categoryId),
+            imageUrl
         };
+
+        console.log("최종 전송 데이터:", finalPostData);
 
         // 백엔드에 최종 저장 요청
         try {
@@ -211,8 +212,8 @@ function Page() {
 
                 <div style = {previewImageStyle}>
                     <div style={imageAreaStyle}>
-                        {img ? (
-                            <img src={img} style={{ width: "100%", height: "100%", objectFit: "contain" }} />
+                        {imageUrl ? (
+                            <img src={imageUrl} style={{ width: "100%", height: "100%", objectFit: "contain" }} />
                         ) : (
                             ""
                         )}
@@ -242,15 +243,15 @@ function Page() {
                     <div style = {textStyle}>카테고리</div>
                     <select
                         style = {{backgroundColor: 'white'}}
-                        value={category}
+                        value={categoryId}
                         onChange={(e) => setCategory(e.target.value)}>
 
                         <option value="">카테고리 선택</option>
-                        <option value="literature">문학</option>
-                        <option value="humanities">인문</option>
-                        <option value="art">예술</option>
-                        <option value="study">어학</option>
-                        <option value="recipe">실용서</option>
+                        <option value="1">문학</option>
+                        <option value="2">인문</option>
+                        <option value="3">예술</option>
+                        <option value="4">어학</option>
+                        <option value="5">실용서</option>
 
                     </select>
 
