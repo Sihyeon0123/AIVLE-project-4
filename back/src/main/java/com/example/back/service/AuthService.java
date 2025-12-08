@@ -242,7 +242,6 @@ public class AuthService {
     }
 
     @Transactional
-    @SuppressWarnings("null")
     public void deleteUser(String token, String pw) {
         /**
          * 회원 탈퇴 서비스 로직
@@ -256,12 +255,17 @@ public class AuthService {
          * @param pw    비밀번호 (본인 확인용)
          */
         log.info("회원 탈퇴 처리 시작: token={}", token);
-
+        if (pw == null || pw.isBlank()) {
+            log.warn("회원 탈퇴 실패 - 비밀번호 미입력");
+            throw new IllegalArgumentException("비밀번호는 필수 입력값입니다.");
+        }
+        
         String userId;
 
         // 1) 토큰 검증 및 userId 추출
         try {
             userId = jwtUtil.getUserId(token);
+            log.info("JWT 검증 성공: userId={}", userId);
         } catch (Exception e) {
             log.warn("회원 탈퇴 실패 - 토큰 검증 실패: token={}", token);
             throw new RuntimeException("사용자 정보를 찾을 수 없습니다.");
@@ -306,7 +310,7 @@ public class AuthService {
          * - 그 외:Exception
          */
         log.info("토큰 유효성 검증 시작");
-        return jwtUtil.validateToken(token); // 예외는 그대로 Controller로 전파
+        return jwtUtil.validateToken(token);
     }
 
     public String reissueAccessToken(String refreshToken) {
@@ -319,32 +323,41 @@ public class AuthService {
          * @return 새롭게 발급된 Access Token (String)
          */
 
-        log.info("토큰 재발급 요청: refreshToken={}", refreshToken);
+        log.info("토큰 재발급 요청 처리 시작: refreshToken={}", refreshToken);
 
-        // Refresh Token 유효성 검사
-        jwtUtil.validateRefreshToken(refreshToken);
+        // 1) Refresh Token 유효성 검사
+        jwtUtil.validateRefreshToken(refreshToken); // 내부에서 예외 발생 시 그대로 전파됨
+        log.info("Refresh Token 유효성 검증 완료");
+
+        // 2) userId 추출
         String userId = jwtUtil.getUserId(refreshToken);
-        
-        if (userId == null || userId.trim().isEmpty()) {
-            log.warn("Refresh Token에서 userId 추출 실패: refreshToken={}", refreshToken);
+        log.info("RefreshToken에서 userId 추출 완료: {}", userId);
+
+        if (userId == null || userId.isBlank()) {
+            log.warn("Refresh Token에서 userId 추출 실패");
             throw new RuntimeException("사용자 정보를 확인할 수 없습니다. 다시 로그인해주세요.");
         }
-        
-        // DB에 저장된 Refresh Token 조회
-        RefreshToken savedToken = refreshTokenRepository.findByUserId(userId).orElse(null);
-        if (savedToken == null) {
-            log.warn("리프레시 토큰 없음: userId={}", userId);
-            throw new RuntimeException("저장된 리프레시 토큰이 없습니다. 다시 로그인해야 합니다.");
-        }
+
+        // 3) DB에 저장된 Refresh Token 조회
+        RefreshToken savedToken = refreshTokenRepository.findByUserId(userId)
+                .orElseThrow(() -> {
+                    log.warn("DB에 저장된 Refresh Token 없음: userId={}", userId);
+                    return new RuntimeException("저장된 리프레시 토큰이 없습니다. 다시 로그인해야 합니다.");
+                });
+
+        // 4) 클라이언트가 보낸 refreshToken과 DB 저장 토큰 비교
         if (!savedToken.getToken().equals(refreshToken)) {
             log.warn("리프레시 토큰 불일치: userId={}", userId);
             throw new RuntimeException("저장된 리프레시 토큰과 일치하지 않습니다.");
         }
+
+        // 5) 만료 여부 확인
         if (System.currentTimeMillis() > savedToken.getExpiry()) {
             log.warn("리프레시 토큰 만료됨: userId={}", userId);
             throw new RuntimeException("리프레시 토큰이 만료되었습니다. 다시 로그인해야 합니다.");
         }
 
+        // 6) 새 Access Token 생성
         String newAccessToken = jwtUtil.createAccessToken(userId);
         log.info("새 Access Token 발급 완료: userId={}", userId);
 
@@ -353,21 +366,44 @@ public class AuthService {
 
 
     public String getUserApiKey(String token) {
+        /**
+         * API Key 조회 서비스
+         * - 전달된 JWT Access Token에서 사용자 ID를 추출하고,
+         *   해당 사용자의 등록된 API Key를 반환하는 로직입니다.
+         *
+         * 처리 흐름:
+         *   1) JWT에서 userId 추출
+         *   2) userId가 유효하지 않을 경우 예외 발생
+         *   3) DB에서 사용자 정보 조회
+         *   4) API Key 존재 여부 확인
+         *   5) API Key 반환
+         *
+         * 예외 처리:
+         *   - 잘못된 토큰: RuntimeException → GlobalExceptionHandler에서 401 처리
+         *   - 사용자 없음: RuntimeException → GlobalExceptionHandler에서 404 처리 가능
+         *   - API Key 없음: IllegalArgumentException → GlobalExceptionHandler에서 400 처리
+         */
         log.info("API Key 조회 처리 시작");
 
         // 1) JWT에서 userId 추출
         String userId = jwtUtil.getUserId(token);
-        
+        log.info("JWT 토큰 검증 완료: userId={}", userId);
+
         if (userId == null || userId.isBlank()) {
+            log.warn("API Key 조회 실패 - 잘못된 토큰");
             throw new RuntimeException("유효하지 않은 토큰입니다.");
         }
 
         // 2) 사용자 조회
         User user = userRepository.findById(userId)
-                .orElseThrow(() -> new RuntimeException("정보를 찾을 수 없습니다."));
+            .orElseThrow(() -> {
+                log.warn("API Key 조회 실패 - 사용자 정보 없음: userId={}", userId);
+                return new RuntimeException("정보를 찾을 수 없습니다.");
+            });
 
         // 3) API Key 확인
         if (user.getApiKey() == null || user.getApiKey().isBlank()) {
+            log.warn("API Key 조회 실패 - 등록된 API Key 없음: userId={}", userId);
             throw new IllegalArgumentException("등록된 API Key가 없습니다.");
         }
 

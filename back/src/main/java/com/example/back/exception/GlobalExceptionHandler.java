@@ -34,7 +34,6 @@ public class GlobalExceptionHandler {
         return build(HttpStatus.UNAUTHORIZED, "유효하지 않은 토큰입니다.");
     }
 
-
     // ====== 500 Database Error ======
     @ExceptionHandler(DataAccessException.class)
     public ResponseEntity<?> handleDatabase(DataAccessException e) {
@@ -45,7 +44,13 @@ public class GlobalExceptionHandler {
     // ====== 500 Internal Error ======
     @ExceptionHandler(RuntimeException.class)
     public ResponseEntity<?> handleRuntime(RuntimeException e) {
-        return build(HttpStatus.INTERNAL_SERVER_ERROR, "처리 중 오류가 발생했습니다.");
+        
+        // e.getMessage()가 null이거나 빈 문자열이면 기본 메시지 사용
+        String message = (e.getMessage() != null && !e.getMessage().isBlank())
+                ? e.getMessage()
+                : "처리 중 오류가 발생했습니다.";
+
+        return build(HttpStatus.INTERNAL_SERVER_ERROR, message);
     }
 
     @ExceptionHandler(Exception.class)
@@ -53,13 +58,9 @@ public class GlobalExceptionHandler {
         return build(HttpStatus.INTERNAL_SERVER_ERROR, "서버 내부 오류가 발생했습니다.");
     }
 
-
     // 공통 응답 생성 함수
     private ResponseEntity<?> build(HttpStatus status, String message) {
-    HttpStatus safeStatus = (status != null) ? status : HttpStatus.INTERNAL_SERVER_ERROR;
-    String safeMessage = (message != null) ? message : "서버 내부 오류가 발생했습니다.";
-    return ResponseEntity.status(safeStatus)
-            .body(new ApiResponse<>("error", safeMessage, null));
-}
-
+        return ResponseEntity.status(status)
+                .body(new ApiResponse<>("error", message, null));
+    }
 }
