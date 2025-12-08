@@ -3,6 +3,7 @@ package com.example.back.config;
 import java.util.List;
 
 import org.springframework.boot.CommandLineRunner;
+import org.springframework.core.annotation.Order;
 import org.springframework.stereotype.Component;
 
 import com.example.back.repository.CategoryRepository;
@@ -11,6 +12,7 @@ import com.example.back.entity.Category;
 import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
+@Order(1)
 @Component
 public class DataInitializer implements CommandLineRunner {
 
