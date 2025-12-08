@@ -2,8 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { useRouter } from 'next/navigation';
-
-//import api from "../api/apiClient";
+import axios from 'axios';
 
 // (컴포넌트) 책 정보
 function BookDetailsView({ authorName, updatedAt, coverImgUrl, content }) {
@@ -50,8 +49,7 @@ function BookEditMenu() {
                 <button className="btn btn-primary me-2"
                     onClick={()=>{
                         // TODO: 수정 버튼 눌렀을 시의 처리
-                    }}
-                >수정</button>
+                    }}>수정</button>
                 <button className="btn btn-danger"
                     onClick={()=>{
                         // TODO: 삭제 버튼 눌렀을 시의 처리
@@ -59,6 +57,14 @@ function BookEditMenu() {
             </div>
         </div>
     );
+}
+
+async function deleteBook() {
+    const apiCallRes = await axios.delete(
+        `http://localhost:8080/api/books/delete/${idx}`
+    );
+    const result = apiCallRes.data;
+
 }
 
 // // Mock Response (Success)
@@ -103,10 +109,45 @@ export default function PostView(props){
         updated_at:'',
         cover_img_url:'',
         content:''
-    });
+    })
+
+    // State
+    const [isOwner, setIsOwner]=useState(false);
+
+    // 현재 사용자의 ID가 입력된 ID와 일치하는지 확인
+    const checkCurrentUserIs = async(id)=> {
+        // accessToken (없으면 false 판정)
+        const token =
+            typeof window !== "undefined"
+                ? localStorage.getItem("accessToken")
+                : null;
+        if (!token) {
+            return false;
+        }
+        // 현재 사용자 ID 확인
+        const response = await axios.get(
+            `http://localhost:8080/api/auth/user-info`, {
+                headers: {
+                    Authorization:`Bearer ${token}`
+                }}
+        );
+        if (response.status !== 200) {
+            console.log("사용자 ID를 확인할 수 없습니다");
+            return false;
+        }
+        // (판정)
+        if (String(response.data.id) === String(id))
+        {
+            console.log("현재 사용자 ===", id);
+            return true;
+        } else {
+            console.log("현재 사용자 !==", id);
+            return false;
+        }
+    }
 
     // (도서 정보 조회 처리)
-    const getDetails = async(idx)=>{
+    const getBookDetails = async(idx)=>{
         //// MEMO: 일단은 하드코딩해놓은 거 사용
         //let response = ((Math.random() < 1.0) ?
         //    createMockResponseSuccessful(idx) : createMockResponseNotFound(idx)
@@ -133,6 +174,8 @@ export default function PostView(props){
                     cover_img_url:response_body?.data?.imageUrl ?? "",
                     content:response_body.data.content
                 });
+                const ownership = await checkCurrentUserIs(response_body.data.ownerUser);
+                setIsOwner(ownership);
             } else {
                 // (책이 존재하지 않는 경우)
                 alert("존재하지 않는 도서입니다.");
@@ -149,25 +192,9 @@ export default function PostView(props){
     useEffect(() => {
         props.params.then(({slug})=>{
             //console.log("idx :"+slug);
-            getDetails(slug);
+            getBookDetails(slug);
         });
     },[props.params]);
-
-    // 작성자 본인 여부 판정
-    // 1. ️로그인 때 저장해둔 accessToken 꺼내기
-    const token =
-        typeof window !== "undefined"
-            ? localStorage.getItem("accessToken")
-            : null;
-    //console.log(token);
-    // 2. 현재 사용자 ID 확인
-    const currentUserId =
-        typeof window !== "undefined"
-            ? sessionStorage.getItem("userId")
-            : null;
-    //console.log(sessionStorage.getItem('userId'));
-    // 3. 현재 사용자 ID가 author_id와 일치하는지 확인
-    const isOwner = Boolean(token && (currentUserId === bookData.owner_id));
 
     // 사용자가 작성자 본인일 경우에는 편집 메뉴 추가
     return (
