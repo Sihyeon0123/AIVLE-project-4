@@ -6,6 +6,7 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.ResponseCookie;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.CookieValue;
+import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PatchMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
@@ -47,7 +48,8 @@ public class AuthController {
          *       {
          *         "id": "사용자ID",
          *         "pw": "비밀번호",
-         *         "name": "이름"
+         *         "name": "이름",
+         *         "apikey": "API KEY"
          *       }
          *
          * @return ResponseEntity<ApiResponse<?>>
@@ -58,25 +60,12 @@ public class AuthController {
          */
         log.info("회원가입 요청: id={}, name={}", req.getId(), req.getName());
 
-        try {
-            authService.signup(req);
-            log.info("회원가입 완료: id={}", req.getId());
-            return ResponseEntity.ok(
-                new ApiResponse<>("success", "회원가입 성공", null)
-            );
+        authService.signup(req);
 
-        } catch (IllegalArgumentException e) {
-            log.warn("회원가입 실패 - 잘못된 요청: id={}, msg={}", req.getId(), e.getMessage());
-            return ResponseEntity.status(401).body(
-                new ApiResponse<>("error", e.getMessage(), null)
-            );
-
-        } catch (Exception e) {
-            log.error("회원가입 서버 오류: id={}, error={}", req.getId(), e.toString());
-            return ResponseEntity.status(500).body(
-                new ApiResponse<>("error", "서버 내부 오류가 발생했습니다. 관리자에게 문의하세요.", null)
-            );
-        }
+        log.info("회원가입 완료: id={}", req.getId());
+        return ResponseEntity.ok(
+            new ApiResponse<>("success", "회원가입 성공", null)
+        );
     }
     
     @PostMapping("/login")
@@ -100,48 +89,35 @@ public class AuthController {
          *   - 500 INTERNAL SERVER ERROR: 서버 오류
          */
         log.info("로그인 요청: id={}", req.getId());
-        try {
-            Map<String, String> tokens = authService.login(req);
-            String accessToken = tokens.get("accessToken");
-            String refreshToken = tokens.get("refreshToken");
 
-            long refreshExpirationSeconds = refreshExpirationMs / 1000;
+        // 모든 예외는 GlobalExceptionHandler에서 처리됨
+        Map<String, String> tokens = authService.login(req);
 
-            log.info("로그인 성공: id={}", req.getId());
-            ResponseCookie refreshCookie = ResponseCookie.from("refreshToken", refreshToken)
-                .httpOnly(true)
-                .secure(false)
-                .sameSite("Lax")
-                .path("/")
-                .maxAge(refreshExpirationSeconds) 
-                .build();
+        String accessToken = tokens.get("accessToken");
+        String refreshToken = tokens.get("refreshToken");
 
-            LoginResponse response = new LoginResponse(
-                "success",
-                "로그인 성공",
-                req.getId()
-            );
+        long refreshExpirationSeconds = refreshExpirationMs / 1000;
 
-            return ResponseEntity.ok()
-                .header("Authorization", "Bearer " + accessToken)
-                .header("Set-Cookie", refreshCookie.toString())
-                .body(response);
-        } catch (IllegalArgumentException e) {
-            log.warn("로그인 실패 - 등록되지 않은 아이디: id={}, msg={}", req.getId(), e.getMessage());
-            return ResponseEntity.status(404).body(
-                new LoginResponse("error", "등록되지 않은 아이디입니다.", null)
-            );
-        } catch (RuntimeException e) {
-            log.warn("로그인 실패 - 비밀번호 불일치: id={}", req.getId());
-            return ResponseEntity.status(401).body(
-                new LoginResponse("error", "비밀번호가 일치하지 않습니다.", null)
-            );
-        } catch (Exception e) {
-            log.error("로그인 서버 오류: id={}, error={}", req.getId(), e.toString());
-            return ResponseEntity.status(500).body(
-                new LoginResponse("error", "서버 내부 오류가 발생했습니다.", null)
-            );
-        }
+        ResponseCookie refreshCookie = ResponseCookie.from("refreshToken", refreshToken)
+            .httpOnly(true)
+            .secure(false)
+            .sameSite("Lax")
+            .path("/")
+            .maxAge(refreshExpirationSeconds)
+            .build();
+
+        LoginResponse response = new LoginResponse(
+            "success",
+            "로그인 성공",
+            req.getId()
+        );
+
+        log.info("로그인 성공: id={}", req.getId());
+
+        return ResponseEntity.ok()
+            .header("Authorization", "Bearer " + accessToken)
+            .header("Set-Cookie", refreshCookie.toString())
+            .body(response);
     }
 
     @PostMapping("/logout")
@@ -158,27 +134,18 @@ public class AuthController {
          *   - 401: 잘못된 토큰 또는 로그아웃 불가
          *   - 500: 서버 오류
          */
-        String token = authHeader.replace("Bearer ", "");
+        String token = "";
+
+        if (authHeader != null && authHeader.startsWith("Bearer ")) {
+            token = authHeader.substring(7); // "Bearer " 이후 토큰만 추출
+        }
         log.info("로그아웃 요청: token={}", token);
 
-        try {
-            authService.logout(token);
-            log.info("로그아웃 완료: token={}", token);
+        authService.logout(token);   // 예외 발생 시 GlobalExceptionHandler에서 처리됨
 
-            return ResponseEntity.ok(
-                new ApiResponse<>("success", "로그아웃 완료", null)
-            );
-        } catch (RuntimeException e) {
-            log.warn("로그아웃 실패 - 잘못된 토큰: token={}, msg={}", token, e.getMessage());
-            return ResponseEntity.status(401).body(
-                new ApiResponse<>("error", e.getMessage(), null)
-            );
-        } catch (Exception e) {
-            log.error("로그아웃 서버 오류: token={}, error={}", token, e.toString());
-            return ResponseEntity.status(500).body(
-                new ApiResponse<>("error", "서버 내부 오류가 발생했습니다.", null)
-            );
-        }
+        log.info("로그아웃 완료: token={}", token);
+
+        return ResponseEntity.ok(new ApiResponse<>("success", "로그아웃 완료", null));
     }
 
     @PatchMapping("/update")
@@ -206,37 +173,16 @@ public class AuthController {
          */
 
         log.info("회원정보 수정 요청");
+        String token = authHeader.replace("Bearer ", "");
 
-           try {
-            // 1) Authorization 헤더 검증
-            if (authHeader == null || !authHeader.startsWith("Bearer ")) {
-                return ResponseEntity.status(401)
-                        .body(new ApiResponse<>("error", "유효하지 않은 인증 정보입니다.", null));
-            }
+        // 서비스에 업데이트 요청
+        authService.updateUser(token, req);
 
-            String token = authHeader.replace("Bearer ", "");
+        log.info("회원정보 수정 완료");
 
-            // 2) 서비스에 업데이트 요청
-            authService.updateUser(token, req);
-
-            log.info("회원정보 수정 완료");
-
-            return ResponseEntity.ok(
-                new ApiResponse<>("success", "회원정보가 성공적으로 수정되었습니다.", null)
-            );
-
-        } catch (RuntimeException e) {
-            log.warn("회원정보 수정 실패: {}", e.getMessage());
-            return ResponseEntity.status(400).body(
-                new ApiResponse<>("error", e.getMessage(), null)
-            );
-
-        } catch (Exception e) {
-            log.error("회원정보 수정 서버 오류: {}", e.toString());
-            return ResponseEntity.status(500).body(
-                new ApiResponse<>("error", "서버 내부 오류가 발생했습니다.", null)
-            );
-        }
+        return ResponseEntity.ok(
+            new ApiResponse<>("success", "회원정보가 성공적으로 수정되었습니다.", null)
+        );    
     }
 
     @PostMapping("/delete")
@@ -371,5 +317,25 @@ public class AuthController {
                 new ApiResponse<>("error", "서버 내부 오류가 발생했습니다.", null)
             );
         }
+    }
+
+    @GetMapping("/api-key")
+    public ResponseEntity<?> getUserApiKey(
+            @RequestHeader("Authorization") String authHeader
+    ) {
+        log.info("API Key 조회 요청");
+
+        if (authHeader == null || !authHeader.startsWith("Bearer ")) {
+            throw new IllegalArgumentException("유효하지 않은 토큰입니다.");
+        }
+
+        String token = authHeader.replace("Bearer ", "");
+
+        // 서비스 호출
+        String apiKey = authService.getUserApiKey(token);
+
+        return ResponseEntity.ok(
+                new ApiResponse<>("success", "API Key 조회 성공", apiKey)
+        );
     }
 }   

@@ -42,6 +42,13 @@ public class AuthService {
          *   - req.getName(): 이름
          */
         log.info("회원가입 처리 시작: id={}", req.getId());
+        if (req.getId() == null || req.getId().isBlank()) {
+            throw new IllegalArgumentException("회원가입 실패 - 아이디는 필수 입력값입니다.");
+        }
+
+        if (req.getPw() == null || req.getPw().isBlank()) {
+            throw new IllegalArgumentException("회원가입 실패 - 비밀번호는 필수 입력값입니다.");
+        }
 
         if (userRepository.existsById(req.getId())) {
             log.warn("회원가입 실패 - 이미 존재하는 아이디: id={}", req.getId());
@@ -52,13 +59,17 @@ public class AuthService {
         user.setId(req.getId());
         user.setPw(passwordEncoder.encode(req.getPw()));
         user.setName(req.getName());
+        // API Key 저장 (null 허용)
+        if (req.getApikey() != null && !req.getApikey().isBlank()) {
+            user.setApiKey(req.getApikey());
+            log.info("API Key 저장: id={}", req.getId());
+        }
 
         userRepository.save(user);
 
         log.info("회원가입 처리 완료: id={}", req.getId());
     }
 
-    @SuppressWarnings("null")
     public Map<String, String> login(LoginRequest req) {
         /**
          * 로그인 서비스 로직
@@ -87,30 +98,38 @@ public class AuthService {
          */
         log.info("로그인 처리 시작: id={}", req.getId());
 
+        if (req.getId() == null || req.getId().isBlank()) {
+            throw new IllegalArgumentException("로그인 실패 - 아이디는 필수 입력값입니다.");
+        }
+        if (req.getPw() == null || req.getPw().isBlank()) {
+            throw new IllegalArgumentException("로그인 실패 - 비밀번호는 필수 입력값입니다.");
+        }
+
         User user = userRepository.findById(req.getId())
             .orElseThrow(() -> {
                 log.warn("로그인 실패 - 존재하지 않는 아이디: id={}", req.getId());
                 return new IllegalArgumentException("등록되지 않은 아이디입니다.");
             });
 
+        // 2) 비밀번호 불일치
         if (!passwordEncoder.matches(req.getPw(), user.getPw())) {
             log.warn("로그인 실패 - 비밀번호 불일치: id={}", req.getId());
             throw new RuntimeException("비밀번호가 일치하지 않습니다.");
-        }   
+        }
 
+        // 3) 토큰 생성
         String accessToken = jwtUtil.createAccessToken(user.getId());
         String refreshToken = jwtUtil.createRefreshToken(user.getId());
-        Long expiry = System.currentTimeMillis() + (14L * 24 * 60 * 60 * 1000); // 14일 후 만료 시간
+        Long expiry = System.currentTimeMillis() + (14L * 24 * 60 * 60 * 1000);
 
+        // 4) Refresh Token 저장 처리
         try {
-            // Refresh Token 조회 (user 기준)
             RefreshToken savedToken = refreshTokenRepository.findByUserId(user.getId()).orElse(null);
+
             if (savedToken == null) {
-                // 저장된 refresh token 없음 → 새로 생성
                 savedToken = new RefreshToken(user, refreshToken, expiry);
                 log.info("Refresh Token 신규 생성: userId={}", user.getId());
             } else {
-                // 기존 refresh token 존재 → 업데이트
                 savedToken.updateToken(refreshToken, expiry);
                 log.info("기존 Refresh Token 업데이트: userId={}", user.getId());
             }
@@ -119,21 +138,19 @@ public class AuthService {
             log.info("Refresh Token 저장 완료: userId={}", user.getId());
 
         } catch (DataAccessException e) {
-            // DB 접근 오류
-            log.error("Refresh Token 저장 실패 - DB 오류: userId={}, error={}", user.getId(), e.getMessage());
+            log.error("Refresh Token 저장 실패(DB 오류): userId={}, error={}", user.getId(), e.getMessage());
             throw new RuntimeException("서버 DB 처리 중 오류가 발생했습니다.");
-
         } catch (Exception e) {
-            // 기타 모든 예외
-            log.error("Refresh Token 저장 실패 - 알 수 없는 오류: userId={}, error={}", user.getId(), e.toString());
+            log.error("Refresh Token 저장 실패(기타 오류): userId={}, error={}", user.getId(), e.toString());
             throw new RuntimeException("리프레시 토큰 저장 중 오류가 발생했습니다.");
         }
 
+        // 5) 결과 반환
         Map<String, String> tokens = new HashMap<>();
         tokens.put("accessToken", accessToken);
         tokens.put("refreshToken", refreshToken);
 
-        log.info("로그인 성공 - 토큰 발급: id={}", req.getId());
+        log.info("로그인 성공 - 토큰 발급 완료: id={}", req.getId());
 
         return tokens;
     }
@@ -151,8 +168,12 @@ public class AuthService {
          */
 
         log.info("로그아웃 처리 시작: token={}", token);
-
         String userId;
+
+        if (token == null || token.trim().isEmpty()) {
+            log.warn("로그아웃 실패 - 토큰 없음");
+            throw new RuntimeException("토큰이 제공되지 않았습니다.");
+        }
 
         try {
             // 1) 토큰 유효성 검사 + userId 추출
@@ -176,23 +197,21 @@ public class AuthService {
     }
     
     @Transactional
-    @SuppressWarnings("null")
     public void updateUser(String token, UpdateRequest req) {
         /**
          * 회원정보 수정 서비스 로직
-         * - token → userId 추출
+         * - token -> userId 추출
          * - 사용자 조회
-         * - 전달된 name, pw 중 존재하는 값만 업데이트
+         * - 전달된 name, pw, apikey 중 존재하는 값만 업데이트
          */
 
         log.info("회원정보 수정 처리 시작");
 
         // 1) JWT에서 userId 추출
-        String userId;
-        try {
-            userId = jwtUtil.getUserId(token);
-        } catch (Exception e) {
-            throw new RuntimeException("유효하지 않은 토큰입니다.");
+        String userId = jwtUtil.getUserId(token); 
+
+        if (userId == null || userId.isBlank()) {
+            throw new IllegalArgumentException("유효하지 않은 토큰입니다.");
         }
 
         // 2) 사용자 조회
@@ -209,6 +228,11 @@ public class AuthService {
             String encodedPw = passwordEncoder.encode(req.getPw());
             user.setPw(encodedPw);
             log.info("사용자 비밀번호 변경");
+        }
+
+        if (req.getApikey() != null && !req.getApikey().isBlank()) {
+            user.setApiKey(req.getApikey());
+            log.info("사용자 API Key 변경");
         }
 
         // 4) 저장
@@ -327,4 +351,28 @@ public class AuthService {
         return newAccessToken;
     }
 
+
+    public String getUserApiKey(String token) {
+        log.info("API Key 조회 처리 시작");
+
+        // 1) JWT에서 userId 추출
+        String userId = jwtUtil.getUserId(token);
+        
+        if (userId == null || userId.isBlank()) {
+            throw new RuntimeException("유효하지 않은 토큰입니다.");
+        }
+
+        // 2) 사용자 조회
+        User user = userRepository.findById(userId)
+                .orElseThrow(() -> new RuntimeException("정보를 찾을 수 없습니다."));
+
+        // 3) API Key 확인
+        if (user.getApiKey() == null || user.getApiKey().isBlank()) {
+            throw new IllegalArgumentException("등록된 API Key가 없습니다.");
+        }
+
+        log.info("API Key 조회 성공: userId={}", userId);
+
+        return user.getApiKey();
+    }
 }

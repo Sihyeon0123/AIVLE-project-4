@@ -73,16 +73,20 @@ public class BookController {
     ) {
         /**
          * 도서 목록 조회 API (GET)
-         * - {page}를 기준으로 도서 목록을 조회합니다.
          *
-         * @param page Long
-         *     - page: default 1
-         *     - size: defalt = 10 (값 고정.)
+         * <동작 개요>
+         * - 페이지 번호와 페이지 크기를 기준으로 도서 목록을 조회하여 응답으로 반환한다.
          *
-         * @return ResponseEntity<ApiResponse<?>>
-         *     - 200: 도서 목록 반환
-         *     - 400: 잘못된 요청
-         *     - 500: 서버 오류
+         * 요청 정보
+         * - @RequestParam int page
+         *   : 조회할 페이지 번호 (기본값 1)
+         * - @RequestParam int size
+         *   : 한 페이지당 조회할 도서 수 (기본값 10)
+         *
+         * 응답 형식 (ResponseEntity<ApiResponse<BookListResponse>>)
+         * - 200: 도서 목록 조회 성공
+         * - 400: 잘못된 페이지 번호 등 잘못된 요청
+         * - 500: 서버 내부 오류 발생 시
          */
         log.info("도서 목록 조회 요청: page={}, size={}", page, size);
 
@@ -113,15 +117,25 @@ public class BookController {
         }
     }
 
-    // TODO: 도서 상세 정보 조회 (GET)
-    /**
-     * 도서 상세 조회
-     * GET /api/books/{bookId}
-     */
     @GetMapping("/detail/{bookId}")
     public ResponseEntity<ApiResponse<BookDetailResponse>> getBookDetail(
             @PathVariable Long bookId
     ) {
+        /**
+         * 도서 상세 조회 API (GET)
+         *
+         * <동작 개요>
+         * - 전달받은 도서 ID를 기준으로 도서 상세 정보를 조회하여 응답으로 반환한다.
+         *
+         * 요청 정보
+         * - @PathVariable Long bookId
+         *   : 상세 조회할 도서의 고유 식별자(ID)
+         *
+         * 응답 형식 (ResponseEntity<ApiResponse<BookDetailResponse>>)
+         * - 200: 도서 상세 조회 성공
+         * - 404: 해당 ID의 도서가 존재하지 않을 경우 (IllegalArgumentException 발생)
+         * - 500: 서버 내부 오류 발생 시
+         */
         log.info("도서 상세 조회 요청: bookId={}", bookId);
 
         try {
@@ -162,7 +176,7 @@ public class BookController {
     }
 
 
-    @PostMapping
+    @PostMapping("/create")
     public ResponseEntity<ApiResponse<?>> createBook(
             @RequestAttribute("userId") String userId,
             @RequestBody BookCreateRequest req
@@ -218,7 +232,7 @@ public class BookController {
         }
     }
 
-    @PutMapping("/{bookId}")
+    @PutMapping("/update/{bookId}")
     public ResponseEntity<ApiResponse<?>> updateBook(
             @RequestAttribute("userId") String userId,
             @PathVariable Long bookId,
@@ -279,19 +293,31 @@ public class BookController {
         }
     }
 
-    // TODO: 도서 삭제 (DELETE)
-    /**
-     * 도서 삭제
-     * DELETE /api/books/{bookId}
-     * - 헤더: Authorization: Bearer JWT_ACCESS_TOKEN
-     * - 바디(JSON): { "bookId": 1 }  (선택, path와 일치 여부만 체크)
-     */
-    @DeleteMapping("/{bookId}")
+    @DeleteMapping("/delete/{bookId}")
     public ResponseEntity<ApiResponse<DeleteBookResponse>> deleteBook(
             @RequestAttribute("userId") String userId,   // ★ 토큰에서 꺼낸 유저 ID
             @PathVariable Long bookId,
             @RequestBody(required = false) DeleteBookRequest body
     ) {
+        /**
+         * 도서 삭제 API (DELETE)
+         *
+         * <동작 개요>
+         * - 인증된 사용자가 요청한 도서 ID를 기준으로 해당 도서를 삭제하고, 그 결과를 응답으로 반환한다.
+         *
+         * 요청 정보
+         * - @RequestAttribute("userId") String userId
+         *   : JwtAuthFilter에서 토큰을 검증한 뒤 request.setAttribute("userId", ...)로 설정한 인증 사용자 ID
+         * - @PathVariable Long bookId
+         *   : 삭제할 도서의 고유 식별자(ID)
+         * - @RequestBody(required = false) DeleteBookRequest body
+         *   : (선택) 삭제 대상 도서 ID를 포함하는 요청 바디
+         *
+         * 응답 형식 (ResponseEntity<ApiResponse<DeleteBookResponse>>)
+         * - 200: 도서 삭제 성공
+         * - 404: 해당 ID의 도서가 존재하지 않을 경우 (IllegalArgumentException 발생)
+         * - 500: 그 외 서버 내부 오류 발생 시
+         */
         log.info("도서 삭제 요청: path bookId={}", bookId);
 
         try {

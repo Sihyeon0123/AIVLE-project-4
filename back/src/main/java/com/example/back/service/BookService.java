@@ -50,19 +50,24 @@ public class BookService {
         return BookListResponse.from(result);
     }
 
-    // TODO: 도서 상세 정보 조회 (GET)
-    /**
-     * 도서 상세 조회
-     */
     public BookDetailResponse getBookDetail(Long bookId) {
-
+        /**
+         * 도서 상세 조회 (GET)
+         *
+         * @param bookId 조회할 도서의 고유 ID
+         * @return 조회된 도서 정보를 담은 BookDetailResponse DTO
+         *
+         * - 전달받은 bookId를 기준으로 DB에서 도서 엔티티를 조회한다.
+         * - 해당 ID의 도서가 존재하지 않을 경우 IllegalArgumentException을 발생시킨다.
+         * - 조회된 Book 엔티티를 BookDetailResponse DTO로 변환하여 반환한다.
+         */
         Book book = bookRepository.findById(bookId)
                 .orElseThrow(() -> new IllegalArgumentException("도서를 찾을 수 없습니다."));
 
         return BookDetailResponse.from(book);
     }
 
-
+    @Transactional
     @SuppressWarnings("null")
     public BookCreateResponse createBook(String userId, BookCreateRequest req) {
         /**
@@ -125,6 +130,7 @@ public class BookService {
         return new BookCreateResponse(saved.getId());
     }
 
+    @Transactional
     @SuppressWarnings("null")
     public BookUpdateResponse updateBook(String userId, Long bookId, BookUpdateRequest req) {
         /**
@@ -201,15 +207,22 @@ public class BookService {
         return new BookUpdateResponse(saved.getId());
     }
 
-    // TODO: 도서 삭제 (DELETE)
-    /**
-     * 도서 삭제 서비스 로직
-     * 1) bookId로 도서를 조회
-     * 2) 없으면 IllegalArgumentException 던져서 404 처리
-     * 3) 있으면 삭제 후 DeleteBookResponse 반환
-     */
     @Transactional
     public DeleteBookResponse deleteBook(String userId, Long bookId) {
+        /**
+         * 도서 삭제 서비스 로직 (DELETE)
+         *
+         * @param userId 삭제 요청을 보낸 사용자 ID
+         * @param bookId 삭제할 도서의 고유 ID
+         * @return 삭제된 도서 정보를 담은 DeleteBookResponse
+         *
+         * - 도서 ID를 기준으로 삭제 대상 도서를 조회한다.
+         * - 도서가 존재하지 않을 경우 IllegalArgumentException을 발생시킨다.
+         * - 요청한 사용자와 도서 작성자가 동일한지 검증하여,
+         *   본인이 작성한 도서만 삭제할 수 있도록 권한을 체크한다.
+         * - 권한이 검증되면 해당 도서를 DB에서 삭제한다.
+         * - 삭제 결과로 삭제된 도서 ID와 삭제 성공 여부를 반환한다.
+         */
 
         // 1) 도서 조회
         Book book = bookRepository.findById(bookId)

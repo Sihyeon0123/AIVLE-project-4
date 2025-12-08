@@ -41,8 +41,11 @@ public class SecurityConfig {
                     "/api/auth/logout",
                     "/api/auth/update",
                     "/api/auth/delete",
-                    "/api/books",
-                    "/api/books/*"
+                    "api/books/detail",
+                    "/api/books/create",
+                    "/api/books/update",
+                    "/api/books/delete",
+                    "/api/auth/apikey"
                 ).authenticated()
                 .anyRequest().permitAll()
             )

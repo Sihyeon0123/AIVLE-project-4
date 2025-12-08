@@ -9,4 +9,5 @@ public class SignupRequest {
     private String id;
     private String pw;
     private String name;
+    private String apikey;
 }

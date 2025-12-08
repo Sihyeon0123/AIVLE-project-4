@@ -18,4 +18,7 @@ public class User {
     
     @Column(nullable = false, length = 100)
     private String name;                          // 이름
+    
+    @Column(name = "api_key", length = 255)
+    private String apiKey;
 }
