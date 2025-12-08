@@ -5,6 +5,7 @@ import org.springframework.dao.DataAccessException;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.server.ResponseStatusException;
 
 import com.example.back.DTO.ApiResponse;
 
@@ -32,6 +33,18 @@ public class GlobalExceptionHandler {
     @ExceptionHandler(SecurityException.class)
     public ResponseEntity<?> handleInvalidJwt(SecurityException e) {
         return build(HttpStatus.UNAUTHORIZED, "유효하지 않은 토큰입니다.");
+    }
+
+    @ExceptionHandler(ResponseStatusException.class)
+    public ResponseEntity<?> handleResponseStatus(ResponseStatusException e) {
+
+        // ResponseStatusException은 내부적으로 statusCode와 reason을 제공함
+        HttpStatus status = HttpStatus.valueOf(e.getStatusCode().value());
+        String message = (e.getReason() != null && !e.getReason().isBlank())
+                ? e.getReason()
+                : "오류가 발생했습니다.";
+
+        return build(status, message);
     }
 
     // ====== 500 Database Error ======

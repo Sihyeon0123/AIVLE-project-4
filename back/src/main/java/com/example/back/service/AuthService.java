@@ -7,9 +7,11 @@ import java.util.HashMap;
 import java.util.Map;
 
 import org.springframework.dao.DataAccessException;
+import org.springframework.http.HttpStatus;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.web.server.ResponseStatusException;
 
 import com.example.back.DTO.LoginRequest;
 import com.example.back.DTO.SignupRequest;
@@ -30,7 +32,7 @@ public class AuthService {
     private final JwtUtil jwtUtil;
     private final PasswordEncoder passwordEncoder;
 
-    public void signup(SignupRequest req) {
+    public void signup(SignupRequest req, String apiKey) {
         /**
          * 회원가입 서비스 로직
          * - 중복 ID 여부 확인
@@ -60,9 +62,11 @@ public class AuthService {
         user.setPw(passwordEncoder.encode(req.getPw()));
         user.setName(req.getName());
         // API Key 저장 (null 허용)
-        if (req.getApikey() != null && !req.getApikey().isBlank()) {
-            user.setApiKey(req.getApikey());
-            log.info("API Key 저장: id={}", req.getId());
+        if (apiKey != null && !apiKey.isBlank()) {
+            user.setApiKey(apiKey);
+            log.info("API Key 저장 완료: id={}", req.getId());
+        } else {
+            log.info("API Key 없음: id={}", req.getId());
         }
 
         userRepository.save(user);
@@ -114,7 +118,7 @@ public class AuthService {
         // 2) 비밀번호 불일치
         if (!passwordEncoder.matches(req.getPw(), user.getPw())) {
             log.warn("로그인 실패 - 비밀번호 불일치: id={}", req.getId());
-            throw new RuntimeException("비밀번호가 일치하지 않습니다.");
+            throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "비밀번호가 일치하지 않습니다.");
         }
 
         // 3) 토큰 생성

@@ -14,8 +14,6 @@ export default function MyInfoPage() {
 
   // 처음 들어올 때 세션에 저장된 정보 가져오기 (로그인 시 세팅해둔 값)
   useEffect(() => {
-    const id = sessionStorage.getItem('userId') || '';
-    const name = sessionStorage.getItem('userName') || '';
 
     setUserId(id);
     setUserName(name);

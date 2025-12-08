@@ -22,6 +22,8 @@ import com.example.back.DTO.SignupRequest;
 import com.example.back.DTO.UpdateRequest;
 import com.example.back.service.AuthService;
 
+import jakarta.servlet.http.Cookie;
+import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
@@ -36,18 +38,22 @@ public class AuthController {
     private long refreshExpirationMs;
      
     @PostMapping("/signup")
-    public ResponseEntity<ApiResponse<?>> signup(@RequestBody SignupRequest req) {
+    public ResponseEntity<ApiResponse<?>> signup(
+            @RequestHeader(value = "API-KEY", required = false) String apiKey,
+            @RequestBody SignupRequest req
+    ) {
         /**
          * 회원가입 API
          * - 클라이언트가 보낸 회원가입 정보(JSON)를 받아서 서비스로 전달하고 결과를 응답합니다.
+         *
+         * @param API-KEY 헤더 값
          *
          * @param req SignupRequest
          *   - 클라이언트가 보낸 JSON:
          *       {
          *         "id": "사용자ID",
          *         "pw": "비밀번호",
-         *         "name": "이름",
-         *         "apikey": "API KEY"
+         *         "name": "이름"
          *       }
          *
          * @return ResponseEntity<ApiResponse<?>>
@@ -56,9 +62,9 @@ public class AuthController {
          *   - 401: 잘못된 요청 (중복 ID 등)
          *   - 500: 서버 내부 오류
          */
-        log.info("회원가입 요청: id={}, name={}", req.getId(), req.getName());
+        log.info("회원가입 요청: id={}, name={}, apiKey={}", req.getId(), req.getName(), apiKey);
 
-        authService.signup(req);
+        authService.signup(req, apiKey);
 
         log.info("회원가입 완료: id={}", req.getId());
         return ResponseEntity.ok(
@@ -119,7 +125,10 @@ public class AuthController {
     }
 
     @PostMapping("/logout")
-    public ResponseEntity<?> logout(@RequestHeader("Authorization") String authHeader) {
+    public ResponseEntity<?> logout(
+            @RequestHeader("Authorization") String authHeader,
+            HttpServletResponse response
+    ) {
         /**
          * 로그아웃 API
          * - Authorization 헤더에 전달된 JWT 토큰으로 로그아웃 처리합니다.
@@ -139,9 +148,16 @@ public class AuthController {
         }
         log.info("로그아웃 요청: token={}", token);
 
-        authService.logout(token);   // 예외 발생 시 GlobalExceptionHandler에서 처리됨
+        authService.logout(token);   
+        
+        Cookie refreshCookie = new Cookie("refreshToken", null);
+        refreshCookie.setHttpOnly(true);
+        refreshCookie.setSecure(false);       
+        refreshCookie.setPath("/");           
+        refreshCookie.setMaxAge(0);
+        refreshCookie.setAttribute("SameSite", "Lax");
 
-        log.info("로그아웃 완료: token={}", token);
+        response.addCookie(refreshCookie);
 
         return ResponseEntity.ok(new ApiResponse<>("success", "로그아웃 완료", null));
     }
