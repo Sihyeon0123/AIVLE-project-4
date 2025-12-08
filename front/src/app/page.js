@@ -7,19 +7,58 @@ export default function Home() {
 
   useEffect(() => {
     async function fetchBooks() {
+
+      try {
+        // 1️로그인 때 저장해둔 accessToken 꺼내기
+        const token = sessionStorage.getItem("accessToken");
+        console.log("홈에서 읽은 accessToken:", token);
+
+        // 토큰이 없으면 요청 안 보내고 그냥 종료
+        if (!token) {
+            console.warn("토큰이 없어서 /api/books 요청을 보내지 않습니다.");
+            return;
+      }
       // 도서 목록 전체(최대 100개) 불러오기
       const res = await fetch(
-        "http://localhost:8080/api/books?page=1&size=100"
+        "http://localhost:8080/api/books?page=1&size=100",
+        {
+            method: "GET",
+            headers: {
+               authorization: `Bearer ${token}`,
+            },
+        }
       );
+
+      console.log("도서 목록 응답 status:", res.status);
+
+      // 403, 401 등 에러면 바로 확인하고 종료
+      if (!res.ok) {
+        const text = await res.text();
+        console.error("도서 목록 API 실패:", res.status, text);
+        return;
+      }
+
       const json = await res.json();
 
-      // 백엔드에서 data.books 리스트가 옴
-      const allBooks = json.data.books;
+      // data 안전하게 체크
+      const allBooks = json.data && Array.isArray(json.data.books)
+            ? json.data.books
+            : [];
 
-      // 전체 중 랜덤으로 섞어서 앞의 3개만 사용
-      const shuffled = [...allBooks].sort(() => Math.random() - 0.5);
-      setBooks(shuffled.slice(0, 3));
-    }
+          const shuffled = [...allBooks].sort(() => Math.random() - 0.5);
+          setBooks(shuffled.slice(0, 3));
+        } catch (err) {
+          console.error("도서 목록 불러오는 중 에러:", err);
+        }
+      }
+
+//      // 백엔드에서 data.books 리스트가 옴
+//      const allBooks = json.data.books;
+//
+//      // 전체 중 랜덤으로 섞어서 앞의 3개만 사용
+//      const shuffled = [...allBooks].sort(() => Math.random() - 0.5);
+//      setBooks(shuffled.slice(0, 3));
+
 
     fetchBooks();
   }, []);
