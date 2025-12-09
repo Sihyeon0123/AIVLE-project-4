@@ -21,26 +21,26 @@ export default function MainNavbar() {
         {/* 왼쪽 메뉴 */}
         <Nav className="me-auto">
           <Nav.Link href="/">홈</Nav.Link>
-          <Nav.Link href="/books">도서 목록</Nav.Link>
-          <Nav.Link href="/rentals">대여 현황</Nav.Link>
+          <Nav.Link href="/">도서 목록</Nav.Link>
           <Form
             className="d-flex align-items-center ms-3"
             action="/search"
             method="GET"
           >
-            <Row>
+            <Row className="g-1">
               <Col xs="auto">
                 <Form.Control
                   type="text"
                   name="keyword" 
                   placeholder="도서 검색"
-                  className="mr-sm-2"
+                  className="me-2 shadow-sm"
+                  style={{ borderRadius: "20px", paddingLeft: "16px" }}
                   required  
                 />
               </Col>
 
               <Col xs="auto">
-                <Button type="submit" variant="primary">
+                <Button type="submit" variant="primary" className="px-4" style={{ borderRadius: "20px" }}>
                   검색
                 </Button>
               </Col>
