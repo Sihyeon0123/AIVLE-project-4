@@ -16,7 +16,7 @@ public class BookDetailResponse {
     private String description;
     private String content;
 
-    private Long categoryId;
+    private Long category;
     private String imageUrl;
     private String ownerUser;
 
@@ -28,7 +28,7 @@ public class BookDetailResponse {
                               String title,
                               String description,
                               String content,
-                              Long categoryId,
+                              Long category,
                               String imageUrl,
                               String ownerUser,
                               LocalDateTime createdAt,
@@ -37,7 +37,7 @@ public class BookDetailResponse {
         this.title = title;
         this.description = description;
         this.content = content;
-        this.categoryId = categoryId;
+        this.category = category;
         this.imageUrl = imageUrl;
         this.ownerUser = ownerUser;
         this.createdAt = createdAt;
@@ -50,7 +50,7 @@ public class BookDetailResponse {
                 .title(book.getTitle())
                 .description(book.getDescription())
                 .content(book.getContent())
-                .categoryId(book.getCategory().getId())
+                .category(book.getCategory().getId())
                 .imageUrl(book.getImageUrl())
                 .ownerUser(book.getUser().getId())
                 .createdAt(book.getCreated_at())

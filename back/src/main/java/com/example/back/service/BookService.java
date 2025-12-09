@@ -132,9 +132,9 @@ public class BookService {
                 });
 
         // 3) 카테고리 조회
-        Category category = categoryRepository.findById(req.getCategoryId())
+        Category category = categoryRepository.findById(req.getCategory())
                 .orElseThrow(() -> {
-                    log.warn("도서 등록 실패 - 카테고리 조회 실패: categoryId={}", req.getCategoryId());
+                    log.warn("도서 등록 실패 - 카테고리 조회 실패: categoryId={}", req.getCategory());
                     return new RuntimeException("카테고리 정보를 찾을 수 없습니다.");
                 });
 
@@ -213,9 +213,9 @@ public class BookService {
         }
 
         // 5) 카테고리 조회
-        Category category = categoryRepository.findById(req.getCategoryId())
+        Category category = categoryRepository.findById(req.getCategory())
                 .orElseThrow(() -> {
-                    log.warn("도서 수정 실패 - 카테고리 조회 실패: categoryId={}", req.getCategoryId());
+                    log.warn("도서 수정 실패 - 카테고리 조회 실패: categoryId={}", req.getCategory());
                     return new RuntimeException("카테고리 정보를 찾을 수 없습니다.");
                 });
 
