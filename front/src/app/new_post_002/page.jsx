@@ -72,7 +72,9 @@ function Page() {
         const categoryPrompt = currentData.categoryName || currentData.categoryId;
 
         // DALL·E 프롬프트 구성
-        const prompt = `제목: ${currentData.title}, 설명: ${currentData.description},  앞의 내용을 기반으로 예술적인 책 표지 이미지를 생성. 표지 이미지는 **${categoryPrompt}**에 맞게.`;
+        const prompt = `제목: ${currentData.title}, 내용 설명: ${currentData.description},  앞의 내용을 기반으로 카테고리의 책 표지 이미지를 생성. 
+                                표지 이미지는 ${categoryPrompt}에 맞게. 책하나의 메인 표지로 사용할 수 있는 하나의 이미지를 빈칸없이 생성`;
+        
 
         try {
             setImageUrl("");
