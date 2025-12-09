@@ -41,8 +41,7 @@ public class Book {
     @CreationTimestamp
     @Column(name = "created_at")
     private LocalDateTime created_at;
-
-    @UpdateTimestamp
+    
     @Column(name = "updated_at")
     private LocalDateTime updated_at;
 }

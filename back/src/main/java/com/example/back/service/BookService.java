@@ -249,6 +249,7 @@ public class BookService {
         book.setTitle(req.getTitle());
         book.setDescription(req.getDescription());
         book.setContent(req.getContent());
+        book.setUpdated_at(java.time.LocalDateTime.now());
 
         // 7) 우선 기본 정보 저장
         Book saved = bookRepository.save(book);
