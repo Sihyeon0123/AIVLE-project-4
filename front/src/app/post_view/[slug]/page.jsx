@@ -6,37 +6,71 @@ import { useParams, useRouter } from 'next/navigation';
 import api from "../../api/apiClient";
 
 // (컴포넌트) 책 정보
-function BookDetailsView({ authorName, updatedAt, coverImgUrl, content }) {
+function BookDetailsView({ bookTitle, authorName, updatedAt, coverImgUrl, content }) {
     return (
-        <div className="row justify-content-center">
-            {/* 왼쪽: 이미지 */}
-            <div className="col-12 col-md-6 text-center">
-                <br/>
-                {coverImgUrl && (
-                    <img
-                        src={coverImgUrl}
-                        width={600}
-                        className="img-fluid"
-                        alt="cover"
-                    />
-                )}
-            </div>
-            {/* 오른쪽: 정보 */}
-            <div className="col-12 col-md-9">
-                <br/>
-                <div><b>작성자: </b>{authorName}</div>
-                <br/>
-                <div><b>수정일: </b>{updatedAt}</div>
-                <br/>
-                <div><b>(본문)</b></div>
-                <div
-                    className="mt-2"
-                    style={{
-                        whiteSpace: "pre-wrap",
-                        wordBreak: "break-word",
-                        overflowWrap: "break-word"
-                    }}
-                >{content}</div>
+        <div className="container d-flex justify-content-center mt-4">
+            <div className="w-75">
+                <div className="row justify-content-center">
+
+                        <div className="card shadow-sm">
+                            <div className="card-body p-4 p-lg-5">
+
+                                {/* (제목) */}
+                                <h2 className="fw-bold mb-4 text-center">
+                                    {bookTitle}
+                                </h2>
+
+                                <div className="row g-5 align-items-start">
+
+                                    {/* 좌측 (표지) */}
+                                    <div className="col-12 col-md-5 text-center">
+                                        {coverImgUrl && (
+                                            <img
+                                                src={coverImgUrl}
+                                                className="img-fluid rounded shadow-sm"
+                                                alt="cover"
+                                                style={{
+                                                    maxHeight: "650px",
+                                                    objectFit: "contain"
+                                                }}
+                                            />
+                                        )}
+                                    </div>
+
+                                    {/* 우측: 작성자/작성일/내용 */}
+                                    <div className="col-12 col-md-7">
+
+                                        <div className="d-flex flex-wrap gap-4 mb-3 fs-5">
+                                            <div>
+                                                <span className="fw-bold">작성자:</span> {authorName}
+                                            </div>
+                                            <div className="text-muted">
+                                                <span className="fw-bold">수정일:</span> {updatedAt}
+                                            </div>
+                                        </div>
+
+                                        <hr className="my-4"/>
+
+                                        <div className="fw-bold fs-5 mb-3">(본문)</div>
+                                        <div
+                                            style={{
+                                                whiteSpace: "pre-wrap",
+                                                wordBreak: "break-word",
+                                                overflowWrap: "break-word",
+                                                lineHeight: "1.85",
+                                                fontSize: "1.05rem"
+                                            }}
+                                        >
+                                            {content}
+                                        </div>
+
+                                    </div>
+                                </div>
+
+                            </div>
+                        </div>
+
+                </div>
             </div>
         </div>
     );
@@ -102,6 +136,7 @@ export default function PostView(props){
         owner_nickname:'',
         updated_at:'',
         cover_img_url:'',
+        title:'',
         content:''
     })
 
@@ -133,6 +168,28 @@ export default function PostView(props){
         }
     }
 
+    // 날짜 처리
+    function formatDate(isoString) {
+        if (!isoString || typeof isoString !== "string") {
+            return "-"; // or "" if you prefer blank
+        }
+
+        const d = new Date(isoString);
+
+        // Invalid Date guard
+        if (isNaN(d.getTime())) {
+            return "-";
+        }
+
+        const yyyy = d.getFullYear();
+        const mm = String(d.getMonth() + 1).padStart(2, "0");
+        const dd = String(d.getDate()).padStart(2, "0");
+        const hh = String(d.getHours()).padStart(2, "0");
+        const min = String(d.getMinutes()).padStart(2, "0");
+
+        return `${yyyy}-${mm}-${dd} ${hh}:${min}`;
+    }
+
     // (도서 정보 조회)
     const getBookDetails = async(idx)=>{
         //// MEMO: 일단은 하드코딩해놓은 거 사용
@@ -157,6 +214,7 @@ export default function PostView(props){
                     owner_nickname:owner_nickname,
                     updated_at:response_body.data.updatedAt,
                     cover_img_url:response_body.data.imageUrl,
+                    title:response_body.data.title,
                     content:response_body.data.content
                 });
                 // 작성자 여부 반영
@@ -223,8 +281,9 @@ export default function PostView(props){
         <div className="container d-flex justify-content-center">
             <div className="w-100">
                 <BookDetailsView
+                    bookTitle={bookData.title}
                     coverImgUrl={bookData.cover_img_url}
-                    updatedAt={bookData.updated_at}
+                    updatedAt={formatDate(bookData.updated_at)}
                     authorName={bookData.owner_id}
                     content={bookData.content}
                 />
