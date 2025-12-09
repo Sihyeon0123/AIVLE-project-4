@@ -11,7 +11,16 @@ export default function Home() {
 
   // 페이지 상태
   const [page, setPage] = useState(1);
-  const size = 28; // 한 페이지 개수
+  const size = 28;
+
+  // AccessToken 보유 여부
+  const [hasToken, setHasToken] = useState(false);
+
+  // mount 시 토큰 체크
+  useEffect(() => {
+    const token = localStorage.getItem("accessToken");
+    setHasToken(!!token);
+  }, []);
 
   // API 호출 함수
   async function fetchBooks(currentPage) {
@@ -51,12 +60,16 @@ export default function Home() {
         <h2 className="section-title m-0">📚 도서 목록</h2>
 
         <div className="flex justify-end items-center gap-3">
-          <button
-            className="badge rounded-pill text-bg-light border books-count-badge"
-            onClick={() => (window.location.href = "/new_post")}
-          >
-            도서 등록
-          </button>
+          
+          {/* 로그인한 사용자만 도서 등록 버튼 표시 */}
+          {hasToken && (
+            <button
+              className="badge rounded-pill text-bg-light border books-count-badge"
+              onClick={() => (window.location.href = "/new_post")}
+            >
+              도서 등록
+            </button>
+          )}
 
           <span className="badge rounded-pill text-bg-light border books-count-badge">
             {loading ? "불러오는 중..." : `총 ${totalItems}권`}
@@ -110,13 +123,12 @@ export default function Home() {
 
                 {/* 제목 + 카테고리 배치 */}
                 <div className="card-body py-2">
-
                   {/* 책 제목 */}
                   <h5 className="card-title book-title mb-1">
                     {book.title || "제목 없음"}
                   </h5>
 
-                  {/* 카테고리 배지 (pill 형태) */}
+                  {/* 카테고리 배지 */}
                   <span
                     className="badge bg-secondary ms-2"
                     style={{
@@ -140,7 +152,7 @@ export default function Home() {
         </div>
       )}
 
-      {/* MUI 페이지네이션 */}
+      {/* 페이지네이션 */}
       {!loading && totalItems > 0 && (
         <div className="pagination-container d-flex justify-content-center">
           <Pagination
