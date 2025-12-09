@@ -53,7 +53,7 @@ export default function Home() {
         <div className="flex justify-end items-center gap-3">
           <button
             className="badge rounded-pill text-bg-light border books-count-badge"
-            onClick={() => (window.location.href = "/new_post_001")}
+            onClick={() => (window.location.href = "/new_post")}
           >
             도서 등록
           </button>

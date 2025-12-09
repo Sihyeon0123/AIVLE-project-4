@@ -173,3 +173,24 @@
 .loading-spinner {
     max-height: 100%;
 }
+
+/* 비활성화된 버튼 공통 스타일 */
+.btn-update:disabled,
+.btn-update[disabled],
+.btn-generate:disabled,
+.btn-generate[disabled] {
+    opacity: 0.6;           /* 흐리게 */
+    cursor: not-allowed;    /* 마우스 포인터 변경 */
+}
+
+/* 등록 버튼 전용 비활성화 색상 */
+.btn-update:disabled,
+.btn-update[disabled] {
+    background-color: #777;   /* 기존 #3c3c3c 보다 연한 회색 */
+}
+
+/* 이미지 생성 버튼 비활성화 색상 */
+.btn-generate:disabled,
+.btn-generate[disabled] {
+    background-color: #666;   /* 기존 #444 보다 연한 회색 */
+}
