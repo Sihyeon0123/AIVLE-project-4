@@ -50,12 +50,17 @@ export default function Home() {
       <div className="d-flex flex-wrap align-items-center justify-content-between gap-2 mb-4">
         <h2 className="section-title m-0">📚 도서 목록</h2>
 
-          <button onClick={() => window.location.href = "/new_post_001"}>
-              추가
-          </button>
-        <span className="badge rounded-pill text-bg-light border books-count-badge">
-          {loading ? "불러오는 중..." : `총 ${totalItems}권`}
-        </span>
+          <div className="flex justify-end items-center gap-3">
+              <button
+                  className="badge rounded-pill text-bg-light border books-count-badge"
+                  onClick={() => window.location.href = "/new_post_001"}>
+                  책 추가
+              </button>
+
+              <span className="badge rounded-pill text-bg-light border books-count-badge">
+                {loading ? "불러오는 중..." : `총 ${totalItems}권`}
+              </span>
+          </div>
       </div>
 
       {/* 로딩 */}

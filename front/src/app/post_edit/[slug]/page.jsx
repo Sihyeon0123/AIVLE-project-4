@@ -15,7 +15,7 @@ function Page() {
 
     const [categories, setCategories] = useState([]);
 
-    // ===================== 1) 카테고리 불러오기 ======================
+    // ===================== 카테고리 불러오기 ======================
     useEffect(() => {
         const loadCategories = async () => {
             try {
@@ -33,7 +33,7 @@ function Page() {
         loadCategories();
     }, []);
 
-    // ===================== 2) 기존 게시물 데이터 불러오기 ======================
+    // ===================== 기존 게시물 데이터 불러오기 ======================
     useEffect(() => {
         if (!slug) return;
 
@@ -45,7 +45,7 @@ function Page() {
                 if (json.status === "success") {
                     const d = json.data;
 
-                    // 🔥 저장된 값을 UI 입력칸에 넣어주기
+                    // 저장된 값을 넣어주기
                     setTitle(d.title);
                     setDescription(d.description);
                     setContent(d.content);
@@ -64,7 +64,7 @@ function Page() {
     }, [slug]);
 
 
-    // ========================== 기존 기능: 이미지 생성 ==========================
+    // ========================== 이미지 생성 ==========================
     const handleSubmit = async () => {
         if (!title || !description || !content || !categoryId) {
             alert("제목, 설명, 내용, 카테고리를 모두 입력해 주세요.");
@@ -83,7 +83,7 @@ function Page() {
         window.open("/new_post_002", "_blank");
     };
 
-    // ========================== 기존 기능: 최종 게시 ==========================
+    // ========================== 최종 게시 ==========================
     const finalCheck = async () => {
         if (!title || !description || !content || !categoryId || !imageUrl) {
             alert("모든 값을 입력해 주세요!");
@@ -125,7 +125,7 @@ function Page() {
         }
     };
 
-    // ========================== 이미지 전달 (기존) ==========================
+    // ========================== 이미지 전달 ==========================
     useEffect(() => {
         const handleMessage = (event) => {
             if (event.data && event.data.imageUrl) {
@@ -136,7 +136,7 @@ function Page() {
         return () => window.removeEventListener("message", handleMessage);
     }, []);
 
-    // ========================== UI 스타일은 그대로 ==========================
+    // ========================== UI 스타일 ==========================
     const containerStyle = {
         maxWidth: '100%',
         width: '80%',

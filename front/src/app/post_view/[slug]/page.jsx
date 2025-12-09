@@ -51,7 +51,7 @@ function BookDetailsView({ bookTitle, authorName, updatedAt, coverImgUrl, conten
 
                                         <hr className="my-4"/>
 
-                                        <div className="fw-bold fs-5 mb-3">(본문)</div>
+                                        <div className="fw-bold fs-5 mb-3">내용</div>
                                         <div
                                             style={{
                                                 whiteSpace: "pre-wrap",
