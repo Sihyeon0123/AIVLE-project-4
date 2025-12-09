@@ -5,6 +5,8 @@ import { useParams, useRouter } from 'next/navigation';
 import "../../css/post_view.css";
 import api from "../../api/apiClient";
 
+import ConfirmModal from "@/app/components/ConfirmModal";   // ⭐ 추가
+
 function BookDetailsView({
     bookTitle,
     authorName,
@@ -21,10 +23,8 @@ function BookDetailsView({
         <div className="container mt-4 d-flex justify-content-center">
             <div className="detail-wrapper">
 
-                {/* ===== 제목 ===== */}
                 <h1 className="detail-title-centered">{bookTitle}</h1>
 
-                {/* ===== 메타 정보 블록 ===== */}
                 <div className="meta-block">
                     <div className="meta-line">
                         <span>작성자: {authorName}</span>
@@ -39,38 +39,32 @@ function BookDetailsView({
                         )}
                     </div>
                 </div>
+
                 <hr className="content-divider2" />
-                {/* ===== 사진 + 설명 블록 ===== */}
+
                 <div className="detail-main-row">
 
-                    {/* 표지 이미지 */}
                     {coverImgUrl && (
                         <div className="detail-cover">
                             <img src={coverImgUrl} alt="cover" className="cover-img" />
                         </div>
                     )}
 
-                    {/* 오른쪽 텍스트 영역 */}
                     <div className="detail-right">
-
                         <h5 className="fw-bold mb-3">📚 책 설명</h5>
                         <p className="detail-paragraph">{description}</p>
 
-                        {/* 버튼을 설명 아래 오른쪽 정렬 */}
                         {isOwner && (
                             <div className="edit-btn-row">
                                 <button className="btn-edit me-2" onClick={onEdit}>수정</button>
                                 <button className="btn-delete" onClick={onDelete}>삭제</button>
                             </div>
                         )}
-
                     </div>
                 </div>
 
-                {/* 구분선 */}
                 <hr className="content-divider" />
 
-                {/* 상세 내용 */}
                 <h5 className="fw-bold mb-3">📖 상세 내용</h5>
                 <p className="detail-paragraph">{content}</p>
 
@@ -94,6 +88,26 @@ export default function PostView(props) {
     });
 
     const [isOwner, setIsOwner] = useState(false);
+
+    // ⭐ ConfirmModal 상태 관리
+    const [showConfirm, setShowConfirm] = useState(false);
+    const [confirmResolver, setConfirmResolver] = useState(null);
+
+    const showConfirmModal = () =>
+        new Promise((resolve) => {
+            setShowConfirm(true);
+            setConfirmResolver(() => resolve);
+        });
+
+    const handleConfirm = () => {
+        confirmResolver?.(true);
+        setShowConfirm(false);
+    };
+
+    const handleCancel = () => {
+        confirmResolver?.(false);
+        setShowConfirm(false);
+    };
 
     const getCurrentUserId = async () => {
         const token = localStorage.getItem("accessToken");
@@ -149,12 +163,20 @@ export default function PostView(props) {
         const ownership = await checkCurrentUserIs(bookData.owner_id);
         if (!ownership) return alert("본인이 등록한 도서만 삭제할 수 있습니다.");
 
-        if (!window.confirm("정말 삭제하시겠습니까?")) return;
+        const ok = await showConfirmModal();
+        if (!ok) return;
 
         try {
             await api.delete(`http://localhost:8080/api/books/delete/${slug}`);
-            alert("삭제되었습니다.");
-            router.back();
+            window.dispatchEvent(
+                new CustomEvent("show-toast", {
+                    detail: {
+                    msg: "삭제되었습니다.",
+                    type: "success",
+                    },
+                })
+            );
+            router.push('/');
         } catch {
             alert("삭제 중 오류가 발생했습니다.");
         }
@@ -165,21 +187,32 @@ export default function PostView(props) {
     }, []);
 
     return (
-        <div className="container d-flex justify-content-center">
-            <div className="w-100">
-                <BookDetailsView
-                    bookTitle={bookData.title}
-                    coverImgUrl={bookData.cover_img_url}
-                    createdAt={formatDate(bookData.created_at)}
-                    updatedAt={formatDate(bookData.updated_at)}
-                    authorName={bookData.owner_id}
-                    description={bookData.description}
-                    content={bookData.content}
-                    isOwner={isOwner}
-                    onEdit={editBook}
-                    onDelete={deleteBook}
-                />
+        <>
+            {/* ⭐ 삭제 확인 모달 */}
+            <ConfirmModal
+                show={showConfirm}
+                title="⚠️ 도서 삭제"
+                message="정말 이 도서를 삭제하시겠습니까?"
+                onConfirm={handleConfirm}
+                onCancel={handleCancel}
+            />
+
+            <div className="container d-flex justify-content-center">
+                <div className="w-100">
+                    <BookDetailsView
+                        bookTitle={bookData.title}
+                        coverImgUrl={bookData.cover_img_url}
+                        createdAt={formatDate(bookData.created_at)}
+                        updatedAt={formatDate(bookData.updated_at)}
+                        authorName={bookData.owner_id}
+                        description={bookData.description}
+                        content={bookData.content}
+                        isOwner={isOwner}
+                        onEdit={editBook}
+                        onDelete={deleteBook}
+                    />
+                </div>
             </div>
-        </div>
+        </>
     );
 }
