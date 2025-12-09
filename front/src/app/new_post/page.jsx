@@ -16,7 +16,6 @@ function Page() {
     const [description, setDescription] = useState("");
     const [content, setContent] = useState("");
 
-    // categoryId + name 저장
     const [selectedCategory, setSelectedCategory] = useState(null);
     const [categories, setCategories] = useState([]);
 
@@ -71,14 +70,13 @@ function Page() {
             title,
             description,
             content,
-            categoryId: selectedCategory.categoryId,
             categoryName: selectedCategory.name,
         };
 
         setIsLoading(true);
         setPreviewImageUrl("");
 
-        const url = await generateCoverImage(postData);
+        const url = await generateCoverImage(postData); // 서버 라우트 호출
 
         setIsLoading(false);
 
