@@ -18,5 +18,3 @@ artifacts:
   base-directory: back/build/libs
   files:
     - "*.jar"
-    - "../appspec.yml"
-    - "../scripts/**"
