@@ -17,4 +17,4 @@ phases:
 artifacts:
   base-directory: back/build/libs
   files:
-    - "*.jar"
+    - "*.war"
