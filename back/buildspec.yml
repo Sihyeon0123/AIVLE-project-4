@@ -1,18 +1,21 @@
-version: 0.0
-os: linux
+version: 0.2
 
-files:
-  - source: /
-    destination: /home/ec2-user/back
+phases:
+  install:
+    runtime-versions:
+      java: corretto17
 
-permissions:
-  - object: /home/ec2-user/back
-    owner: ec2-user
-    group: ec2-user
-    mode: 755
+  pre_build:
+    commands:
+      - cd back
 
-hooks:
-  AfterInstall:
-    - location: scripts/back-start.sh
-      timeout: 300
-      runas: ec2-user
+  build:
+    commands:
+      - ./gradlew clean build -x test
+
+artifacts:
+  base-directory: back/build/libs
+  files:
+    - "*.jar"
+    - "../appspec.yml"
+    - "../scripts/**"
