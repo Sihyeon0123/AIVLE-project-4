@@ -20,7 +20,7 @@ artifacts:
     - .next/**/*
     - public/**/*
     - package.json
-    - node_modules/**/*
+    - package-lock.json
     - next.config.js
     - appspec.yml
     - scripts/**/*

@@ -13,10 +13,10 @@ $NODE -v
 $NPM -v
 $PM2 -v
 
-# 기존 프로세스 정리 (stop 역할)
+# 기존 프로세스 종료
 $PM2 delete front || true
 
-# Next.js 실행
+# Next.js 실행 (package.json의 start 스크립트 사용)
 $PM2 start npm --name "front" -- start
 
 exit 0
