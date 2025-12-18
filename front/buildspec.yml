@@ -19,7 +19,8 @@ phases:
 artifacts:
   base-directory: front
   files:
-    - .next/**/*
+    - .next/standalone/**/*
+    - .next/static/**/*
     - public/**/*
     - appspec.yml
     - scripts/**/*
