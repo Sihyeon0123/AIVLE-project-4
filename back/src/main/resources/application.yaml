@@ -6,8 +6,10 @@ spring:
   datasource:
     driver-class-name: org.h2.Driver
     url: jdbc:h2:file:/home/ubuntu/app/library
-    username: ${DB_USERNAME}
-    password: ${DB_PASSWORD}
+    #username: ${DB_USERNAME}
+    #password: ${DB_PASSWORD}
+    username: sa
+    password: 1234
   h2:
     console:
       enabled: true
@@ -18,11 +20,12 @@ spring:
       show-sql: true
 
 jwt:
-  secret: ${JWT_SECRET}
+  # secret: ${JWT_SECRET}
+  secret: SecretKey123456SecretKey123456SecretKey123456
   # Access Token 만료 시간 (2시간 = 2 * 60 * 60 * 1000ms)
   access-expiration: 7200000
   # Refresh Token 만료 시간 (2주 = 14 * 24 * 60 * 60 * 1000ms)
   refresh-expiration: 1209600000
 
-external: 
-  api-key: ${EXTERNAL_API_KEY}
+# external: 
+#   api-key: ${EXTERNAL_API_KEY}
