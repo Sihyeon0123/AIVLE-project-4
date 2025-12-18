@@ -1,17 +1,11 @@
 #!/bin/bash
 
+export JWT_SECRET="SecretKey123456SecretKey123456SecretKey123456"
+export DB_USERNAME="sa"
+export DB_PASSWORD="1234"
+
 APP_DIR=/home/ubuntu/app
 cd $APP_DIR || exit 1
-
-echo "==== DEBUG START ====" >> debug.log
-date >> debug.log
-whoami >> debug.log
-pwd >> debug.log
-env >> debug.log
-which java >> debug.log
-java -version >> debug.log 2>&1
-ls -al >> debug.log
-echo "==== DEBUG END ====" >> debug.log
 
 PID=$(pgrep -f '.war' || true)
 if [ -n "$PID" ]; then

@@ -1,9 +1,14 @@
-'use client';
+"use client";
 
 import { useEffect, useState } from "react";
 import Pagination from "@mui/material/Pagination";
 import "./css/books.css";
+
+// 🔐 인증 필요한 API용 (유지)
 import api from "@/app/api/apiClient";
+
+// 🌐 인증 불필요 API용 (추가)
+import publicApi from "@/app/api/publicApiClient";
 
 export default function Home() {
   const [books, setBooks] = useState([]);
@@ -21,7 +26,7 @@ export default function Home() {
   }, []);
 
   // ==========================
-  // ✅ 도서 목록 조회 (수정 완료)
+  // ✅ 도서 목록 조회 (JWT 없음)
   // ==========================
   async function fetchBooks(currentPage) {
     try {
@@ -32,7 +37,8 @@ export default function Home() {
         `/api/books?page=${currentPage}&size=${size}`
       );
 
-      const res = await api.get("/api/books", {
+      // ✅ public API 클라이언트 사용
+      const res = await publicApi.get("/api/books", {
         params: {
           page: currentPage,
           size,
@@ -156,4 +162,3 @@ export default function Home() {
     </main>
   );
 }
- 
