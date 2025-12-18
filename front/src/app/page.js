@@ -27,7 +27,9 @@ export default function Home() {
   async function fetchBooks(currentPage) {
     try {
       setLoading(true);
-
+      const baseURL = api.defaults.baseURL ?? "";
+      const url = `${baseURL}/books?page=${currentPage}&size=${size}`;
+      console.log("📡 요청 URL:", url);
       const res = await api.get("/books", {
         params: {
           page: currentPage,
