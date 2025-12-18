@@ -12,6 +12,7 @@ phases:
 
   build:
     commands:
+      - cd back
       - ./gradlew clean build -x test
 
 artifacts:
