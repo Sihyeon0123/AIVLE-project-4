@@ -2,7 +2,7 @@ version: 0.0
 os: linux
 
 files:
-  - source: back/build/libs
+  - source: build/libs
     destination: /home/ubuntu/app
     file_exists_behavior: OVERWRITE
 

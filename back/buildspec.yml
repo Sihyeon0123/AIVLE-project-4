@@ -7,16 +7,15 @@ phases:
 
   pre_build:
     commands:
-      - chmod +x back/gradlew
+      - chmod +x gradlew
+      - chmod +x scripts/*.sh
 
   build:
     commands:
-      - cd back
       - ./gradlew clean build -x test
-      - cd ..
 
 artifacts:
   files:
     - appspec.yml
     - scripts/**/*
-    - back/build/libs/*.war
+    - build/libs/*.war
