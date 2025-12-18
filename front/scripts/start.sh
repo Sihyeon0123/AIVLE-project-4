@@ -1,14 +1,23 @@
 #!/bin/bash
 set -e
 
-cd /home/ubuntu/app
+APP_DIR=/home/ubuntu/app
+cd $APP_DIR
 
-# pm2 없으면 실패하므로 안전 처리
+# pm2 없으면 설치 (최소 방어)
 if ! command -v pm2 >/dev/null 2>&1; then
   npm install -g pm2
 fi
 
-# 기존 프로세스 있으면 재시작, 없으면 시작
-pm2 start ecosystem.config.js --env production || pm2 restart ecosystem.config.js
+# 의존성 없을 경우만 설치 (매번 안 깔도록)
+if [ ! -d "node_modules" ]; then
+  npm ci --omit=dev
+fi
+
+# 기존 프로세스 정리
+pm2 delete front || true
+
+# npm start 실행 (package.json 기준)
+pm2 start npm --name "front" -- start
 
 pm2 save
