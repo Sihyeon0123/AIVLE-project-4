@@ -13,4 +13,5 @@ cd ${APP_DIR}
 export NODE_ENV=production
 export PORT=${PORT}
 
+# 테스트
 pm2 start npm --name front -- run start
