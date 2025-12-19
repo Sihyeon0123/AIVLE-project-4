@@ -22,10 +22,16 @@ public class S3Config {
 
     @Bean
     public S3Client s3Client() {
-        AwsCredentialsProvider provider =
-                (StringUtils.hasText(profile))
-                        ? ProfileCredentialsProvider.builder().profileName(profile).build()
-                        : DefaultCredentialsProvider.create();
+        AwsCredentialsProvider provider;
+
+        // profile이 있고, 실제로 로컬 프로필 파일이 있을 때만 profile 사용
+        if (StringUtils.hasText(profile)) {
+            provider = ProfileCredentialsProvider.builder()
+                    .profileName(profile)
+                    .build();
+        } else {
+            provider = DefaultCredentialsProvider.create(); // EC2 IAM Role 포함
+        }
 
         return S3Client.builder()
                 .region(Region.of(region))

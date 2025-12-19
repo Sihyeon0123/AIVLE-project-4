@@ -39,5 +39,3 @@ app:
     prefix: bookcovers/
     return-mode: PUBLIC_URL
     public-base-url: https://user045-book.s3.ap-southeast-1.amazonaws.com
-    profile: default   # 추가 (로컬/서버에서 aws configure로 만든 기본 프로필)
-
