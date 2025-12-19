@@ -11,12 +11,6 @@ pm2 delete front || true
 echo "=== clean old CodeDeploy bundles ==="
 sudo rm -rf ${DEPLOY_ROOT}/* || true
 
-echo "=== clean npm cache ==="
-npm cache clean --force || true
-
-echo "=== clean old node_modules (safety) ==="
-rm -rf ${APP_DIR}/node_modules || true
-
 echo "=== start next.js with pm2 ==="
 cd ${APP_DIR}
 
