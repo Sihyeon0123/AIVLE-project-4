@@ -1,7 +1,7 @@
 #!/bin/bash
 set -e
 
-APP_DIR=/home/ubuntu/app/front
+APP_DIR=/home/ubuntu/app
 PORT=3000
 
 echo "=== stop existing app ==="
