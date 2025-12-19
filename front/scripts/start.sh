@@ -8,9 +8,6 @@ DEPLOY_ROOT=/opt/codedeploy-agent/deployment-root
 echo "=== stop existing app ==="
 pm2 delete front || true
 
-echo "=== clean old CodeDeploy bundles ==="
-sudo rm -rf ${DEPLOY_ROOT}/* || true
-
 echo "=== start next.js with pm2 ==="
 cd ${APP_DIR}
 
