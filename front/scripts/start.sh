@@ -9,7 +9,7 @@ pm2 delete front || true
 
 echo "=== start next.js with pm2 ==="
 cd ${APP_DIR}
-npm ci
+npm ci --omit=dev
 
 export NODE_ENV=production
 export PORT=${PORT}
