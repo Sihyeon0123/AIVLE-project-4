@@ -15,6 +15,8 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import software.amazon.awssdk.services.s3.S3Client;
+import software.amazon.awssdk.services.s3.model.DeleteObjectRequest;
 
 @Service
 @Slf4j
@@ -25,6 +27,7 @@ public class BookService {
     private final UserRepository userRepository;
     private final CategoryRepository categoryRepository;
     private final BookCoverStorageService bookCoverStorageService;
+    private final S3Client s3Client;
 
     public BookListResponse getBooks(int page, int size) {
         Sort sort = Sort.by(Sort.Direction.DESC, "id");
@@ -212,8 +215,14 @@ public class BookService {
             throw new RuntimeException("본인이 등록한 도서만 삭제할 수 있습니다.");
         }
 
-        // (선택) 여기서 S3에 올린 이미지도 같이 삭제하려면
-        // book.getImageUrl()에서 key 추출해서 S3 deleteObject 처리하면 됨 (지금은 생략)
+        String imageUrl = book.getImageUrl();
+        if (imageUrl != null && !imageUrl.isBlank()) {
+            String key = imageUrl.substring(imageUrl.indexOf(".amazonaws.com/") + ".amazonaws.com/".length());
+            s3Client.deleteObject(DeleteObjectRequest.builder()
+                    .bucket("user045-book")
+                    .key(key)
+                    .build());
+        }
 
         bookRepository.delete(book);
         return new DeleteBookResponse(bookId, 1);
