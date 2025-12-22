@@ -1,49 +1,31 @@
+start.sh 롤백 코드
+
 #!/bin/bash
 set -e
 
+export JWT_SECRET="SecretKey123456SecretKey123456SecretKey123456"
+export DB_USERNAME="sa"
+export DB_PASSWORD="1234"
+
 APP_DIR=/home/ubuntu/app
-LOG_FILE="$APP_DIR/app.log"
+LOG_FILE=${APP_DIR}/app.log
 
-cd "$APP_DIR"
+cd "$APP_DIR" || exit 1
 
-echo "=== Cleanup old artifacts (remove plain.war) ==="
-rm -f *-plain.war || true
-
-echo "=== Stop existing app ==="
+echo "=== Stop existing WAR ==="
 PID=$(pgrep -f 'java.*\.war' || true)
 if [ -n "$PID" ]; then
-  echo "Found PID: $PID"
-  kill -15 $PID || true
-
-  # 최대 20초 정도 정상 종료 기다림
-  for i in {1..20}; do
-    if ps -p "$PID" >/dev/null 2>&1; then
-      sleep 1
-    else
-      break
-    fi
-  done
-
-  # 아직 살아있으면 강제 종료
-  if ps -p "$PID" >/dev/null 2>&1; then
-    echo "Force kill PID: $PID"
-    kill -9 "$PID" || true
-  fi
+  kill -15 $PID
+  sleep 5
 fi
 
 echo "=== Find executable WAR (exclude plain.war) ==="
-WAR_FILE=$(ls -1 *.war 2>/dev/null | grep -v -- '-plain\.war$' | head -n 1 || true)
+WAR_FILE=$(ls *.war 2>/dev/null | grep -v plain | head -n 1)
 
 if [ -z "$WAR_FILE" ]; then
-  echo "❌ Executable WAR not found (plain.war excluded)"
-  echo "Current files:"
-  ls -al
+  echo "❌ Executable WAR not found (plain.war excluded)" >> "$LOG_FILE"
   exit 1
 fi
 
-echo "=== Start application: $WAR_FILE ==="
-nohup java -jar "$WAR_FILE" > "$LOG_FILE" 2>&1 &
-
-sleep 1
-echo "Started. Last 30 lines of log:"
-tail -n 30 "$LOG_FILE" || true
+echo "=== Start WAR: $WAR_FILE ==="
+nohup /usr/bin/java -jar "$WAR_FILE" >> "$LOG_FILE" 2>&1 &
