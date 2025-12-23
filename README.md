@@ -49,7 +49,7 @@
 4. **도서 수정 및 삭제 기능**: 인증된 도서 작성자 본인의 도서 정보를 수정하거나 삭제할 수 있습니다.
 5. **AI 기반 도서 표지 이미지 생성 기능**: 도서의 제목과 설명을 기반으로 AI가 자동으로 표지 이미지를 생성하고 저장합니다.
 6. **공통 API 응답 구조 적용**: 모든 API 응답을 `status`, `message`, `data` 형식의 공통 응답 구조로 통일하여 관리합니다.
-7. **H2 기반 데이터베이스 관리**: H2 파일 기반 DB를 사용하여 도서, 사용자, 카테고리, Refresh Token 데이터를 관리합니다.
+7. **MySQL 기반 데이터베이스**: MySQL DB를 사용하여 도서, 사용자, 카테고리, Refresh Token 데이터를 관리합니다.
 8. **보안 필터 기반 인증 처리**: JWT 검증을 필터에서 일괄 처리하여 컨트롤러와 서비스의 보안 로직을 분리합니다.
 
 ---
@@ -98,7 +98,7 @@
                 <img src="https://img.shields.io/badge/Spring_Boot-6DB33F?style=flat&logo=spring-boot&logoColor=white"/>
                 <img src="https://img.shields.io/badge/Java-007396?style=flat-square&logo=Java&logoColor=white"/>
                 <img src="https://img.shields.io/badge/Gradle-02303A?style=flat&logo=gradle&logoColor=white"/>
-                <img src="https://img.shields.io/badge/H2 Database-09476B?style=flat&logo=H2 Database&logoColor=white"/>
+                <img src="https://img.shields.io/badge/MySQL-4479A1?style=flat&logo=mysql&logoColor=white"/>
             </td>
         </tr>
         <tr>
@@ -192,6 +192,65 @@
 
 ## 📊 ERD
 
-![ERD Diagram](./docs/ERD.png)
+![ERD Diagram](./docs/ERD/ERD.png)
 
 ---
+
+## 🚀 클라우드 아키텍처 & CI/CD 구성
+
+### 1️. 전체 클라우드 아키텍처 구성
+
+[System Architecture Diagram](./docs/cloud/cloud_architecture.png)
+
+AWS 환경에서 **ALB – EC2 – RDS**를 중심으로 한 클라우드 아키텍처를 구성했습니다.  
+외부 사용자의 요청은 Application Load Balancer를 통해 유입되며,  
+트래픽은 Auto Scaling Group에 포함된 EC2 인스턴스로 분산 처리됩니다.  
+이를 통해 단일 서버 장애 상황에서도 서비스 가용성을 유지할 수 있도록 설계했습니다.
+
+데이터베이스는 RDS Multi-AZ 구성을 적용하여 서로 다른 가용 영역(AZ)에  
+Primary와 Standby 인스턴스를 배치했으며,  
+장애 발생 시 자동 Failover가 이루어지는 고가용성 구조를 갖추었습니다.
+
+---
+
+### 2. ALB & Auto Scaling 기반 트래픽 분산 및 확장 구조
+
+![System Architecture Diagram](./docs/cloud/AutoScaling_ALB.gif)
+
+Application Load Balancer(ALB)와 Auto Scaling Group(ASG)을 활용해  
+가용성과 확장성을 고려한 클라우드 아키텍처를 구성했습니다.
+
+외부 요청은 ALB를 단일 진입 지점으로 하여 유입되며,  
+Target Group에 등록된 EC2 인스턴스로 트래픽이 분산됩니다.  
+이를 통해 특정 인스턴스에 부하가 집중되는 상황을 방지하고,  
+안정적인 요청 처리가 가능하도록 설계했습니다.
+
+Auto Scaling Group은 여러 가용 영역(AZ)에 걸쳐 인스턴스를 관리하며,  
+헬스 체크를 기준으로 비정상 인스턴스를 자동으로 교체해  
+단일 서버 장애 상황에서도 서비스 가용성을 유지합니다.
+
+또한 CPU 사용률 등의 지표를 기준으로 인스턴스를 자동 확장·축소할 수 있는 구조를 갖추었으며,  
+현재는 안정적인 운영을 위해 최소·최대 인스턴스 수를 동일하게 설정했습니다.
+
+이를 통해 **트래픽 분산, 장애 대응, 확장성을 함께 고려한 클라우드 운영 환경**을 구현했습니다.
+
+
+---
+
+### 3. CI/CD 파이프라인 (CodePipeline 기반 자동 배포)
+
+![CI/CD Pipeline Diagram](./docs/cloud/CodePipeline.gif)
+
+GitHub 저장소에 코드가 푸시되면 AWS CodePipeline이 자동으로 실행되도록 구성했습니다.  
+파이프라인은 다음 단계로 구성됩니다.
+
+- Source: GitHub 코드 변경 감지
+- Manual-Approval: Email을 통해 배포 전 수동 승인을 받도록 구성
+- Build: CodeBuild를 통한 애플리케이션 빌드 및 산출물 생성
+- Deploy: CodeDeploy를 활용한 EC2 자동 배포
+
+이 과정을 통해 수동 배포로 인한 실수를 줄이고,  
+항상 동일한 환경에서 일관된 배포가 이루어지도록 CI/CD 환경을 구축했습니다.
+
+---
+
