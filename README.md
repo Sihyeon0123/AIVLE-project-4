@@ -5,11 +5,13 @@
 
 <br/>
 <div align="center">
-  <a href="https://www.notion.so/AIVLE-School-4-2bf994ebe25d80e386a7d101c97ffd0d">Notion</a>
-  &nbsp; | &nbsp; 
-  <a href="https://www.figma.com/design/r3jpdOz2xgUvo7j7NIQbUV/4%EC%B0%A8-%EB%AF%B8%EB%8B%88?node-id=0-1&p=f/">Figma</a>
-  &nbsp; | &nbsp; 
-  <a href="https://docs.google.com/spreadsheets/d/1El2XurvM0hBwo7mui5dlEC87zFCsDXSg/edit?gid=1349883987#gid=1349883987">API 명세서</a>
+    <a href="https://www.notion.so/AIVLE-School-4-2bf994ebe25d80e386a7d101c97ffd0d">Notion</a>
+    &nbsp; | &nbsp; 
+    <a href="https://www.figma.com/design/r3jpdOz2xgUvo7j7NIQbUV/4%EC%B0%A8-%EB%AF%B8%EB%8B%88?node-id=0-1&p=f/">Figma</a>
+    &nbsp; | &nbsp; 
+    <a href="https://docs.google.com/spreadsheets/d/1El2XurvM0hBwo7mui5dlEC87zFCsDXSg/edit?gid=1349883987#gid=1349883987">API 명세서</a>
+    &nbsp; | &nbsp;
+    <a href="https://drive.google.com/file/d/156oOZrLlVBzqF2xauUfOO0wAcNBt04Zr/view?usp=sharing">AWS 시스템 아키텍처</a>
 </div>
 
 ## ✍️ 프로젝트 개요
@@ -187,6 +189,8 @@
 ## 🔨 시스템 아키텍처
 
 ![System Architecture](./docs/System_Architecture.png)
+
+![AWS System Architecture](./docs/AWS_System_Architecture.png)
 
 ---
 
